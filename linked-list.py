@@ -1,28 +1,23 @@
 
-from typing import List
-
-
+from typing import List, Union, Tuple
 class ListNode:
-    def __init__(self, val=0, next=None):
-        if type(val) == list:
-            assert len(val) > 0
-            self.val = val[0]
-            if len(val) > 1:
-                self.next = ListNode(val=val[1:])
-            else:
-                self.next = None
-            
+    def __init__(self, data: Union[int, Tuple[int, Union[int, None]], List[Union[int, None]]] = 0, next: 'ListNode' = None, random: 'ListNode' = None):
+        if type(data) in [tuple, list]:
+            assert len(data) == 2
+            self.val = data[0]
+            self.random =data[1]
         else:
-            self.val = val
-            self.next = next
+            self.val = data
+        self.next = next
+
     def print(self):
-        if self.next is None:
-            print('{}-->'.format(self.val))
-        else:
-            print('{}-->'.format(self.val), end = '')
-            self.next.print()
-
-
+        print('{}-->'.format(self.val), end = '')
+        p = self.next
+        while p is not None:
+            print('{}-->'.format(p.val), end = '')
+            p = p.next
+        print()
+Node = ListNode
 class Solution:
     def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
         ret = None
@@ -81,9 +76,70 @@ class Solution:
         oldTail.next = head
         return newHead
 
+    def copyRandomList(self, head: ListNode) -> ListNode:
+        if head is None: return None
+
+        nodeDict = {id(None): None}
+        ret = Node(head.val)
+        nodeDict[id(head)] = ret
+
+        srcNode = head
+        dstNode = ret
+        while srcNode is not None:
+            if not id(srcNode.next) in nodeDict:
+                nodeDict[id(srcNode.next)] = Node(srcNode.next.val)
+            dstNode.next = nodeDict[id(srcNode.next)]
+
+            if not id(srcNode.random) in nodeDict:
+                nodeDict[id(srcNode.random)] = Node(srcNode.random.val)
+            dstNode.random = nodeDict[id(srcNode.random)]
+
+            srcNode = srcNode.next
+            dstNode = dstNode.next
+        return ret
+    
+    def copyRandomListV2(self, head: ListNode) -> ListNode:
+        if head is None: return None
+        
+        src = head
+        while src is not None:
+            dst = Node(src.val)
+            dst.next = src.next
+            src.next = dst
+            src = dst.next
+        
+        src = head
+        dst = head.next
+        while True:
+            if src.random is not None:
+                dst.random = src.random.next
+            src = dst.next
+            if src is not None:
+                dst = src.next
+            else:
+                break
+
+        src = head
+        dst = head.next
+        ret = dst
+        while True:
+            src.next = dst.next
+            src = src.next
+            if src is not None:
+                dst.next = src.next
+                dst = src.next
+            else:
+                break
+        return ret
+
+def singly_list(nodes: Union[List[int], List[list]] = []) -> Union[ListNode, None]:
+    nextNode = None
+    for e in nodes[::-1]:
+        nextNode = ListNode(e, next = nextNode)
+    return nextNode
 if __name__ == '__main__':
     s = Solution()
-    L = ListNode(val=[1, 2, 3, 4, 5])
-    k = 1
-    nL = s.rotateRight(L, k)
-    nL.print()
+    L = singly_list(nodes=[[7, None],[13,0],[11,4],[10,2],[1,0]])
+    s.copyRandomListV2(L).print()
+
+
