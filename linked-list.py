@@ -11,12 +11,12 @@ class ListNode:
         self.next = next
 
     def print(self):
-        print('{}-->'.format(self.val), end = '')
+        print('{}->'.format(self.val), end = '')
         p = self.next
         while p is not None:
-            print('{}-->'.format(p.val), end = '')
+            print('{}->'.format(p.val), end = '')
             p = p.next
-        print()
+        print('NULL')
 Node = ListNode
 class Solution:
     def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
@@ -132,6 +132,73 @@ class Solution:
                 break
         return ret
 
+    def reverseList(self, head: ListNode) -> ListNode:
+        thisNode = head
+        prvNode = None
+        while thisNode is not None:
+            nextNode = thisNode.next
+            thisNode.next = prvNode
+            prvNode = thisNode
+            thisNode = nextNode
+        return prvNode
+
+    def reverseBetween(self, head: ListNode, m: int, n: int) -> ListNode:
+        if (head is None): return head
+        thisNode = head
+        prvNode = None
+        i = 1
+        while i < m:
+            prvNode = thisNode
+            thisNode = thisNode.next
+            i += 1
+        breakL = prvNode
+        breakR = thisNode
+        while i <= n:
+            nextNode = thisNode.next
+            thisNode.next = prvNode
+            prvNode = thisNode
+            thisNode = nextNode
+            i += 1
+        if breakL is None:
+            head = prvNode
+        else:
+            breakL.next = prvNode
+        breakR.next = thisNode
+        return head
+
+    def lengthOfLongestSubstring(self, s: str) -> int:
+        """
+        Given a string, find the length of the longest substring without repeating characters.
+
+        Args:
+            s (str): input string
+
+        Returns:
+            int: the length of the longest substring without repeating characters
+        """
+
+        # Starting from the first character, try to extend a substring without repeating characters as long as possible. Once a repeating character appears, say 'r', the longer non-reapeating substring can only appear after the first 'r'. Thus we try to find the next substring starting from the character after the first 'r' and reapeat the procedure.
+        ret  = 0
+        sIdx = 0 # the starting index of the non-repeating substring being extended
+        c2Idx = {} # a dictionary mapping each character of current substring to its index
+        for i,c in enumerate(s):
+            if c in c2Idx: # check if the new character exists in the substring
+                # the non-repeating substring ends here
+                if ret < len(c2Idx):
+                    ret = len(c2Idx)
+
+                # we only need to remove characters appears before the firs repeating characters
+                rIdx = c2Idx[c]
+                for j in range(sIdx, rIdx):
+                    c2Idx.pop(s[j])
+
+                # the starting index of the new substring
+                sIdx = rIdx + 1
+            c2Idx[c] = i
+        if ret < len(c2Idx):
+            ret = len(c2Idx)
+        return ret
+
 def singly_list(nodes: Union[List[int], List[list]] = []) -> Union[ListNode, None]:
     nextNode = None
     for e in nodes[::-1]:
@@ -139,7 +206,7 @@ def singly_list(nodes: Union[List[int], List[list]] = []) -> Union[ListNode, Non
     return nextNode
 if __name__ == '__main__':
     s = Solution()
-    L = singly_list(nodes=[[7, None],[13,0],[11,4],[10,2],[1,0]])
-    s.copyRandomListV2(L).print()
+    L = singly_list(nodes=[1, 2, 3, 4, 5])
+    s.reverseBetween(L, 1, 5).print()
 
 
