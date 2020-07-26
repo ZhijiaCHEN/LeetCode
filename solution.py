@@ -2,6 +2,7 @@
 from typing import List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
+
 Node = ListNode
 class Q2:
     def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
@@ -120,6 +121,28 @@ class Q19:
                 return None
             else:
                 return head.next
+
+class Q23:
+    def min_node(self, nodes: List[ListNode]) -> ListNode:
+        minIdx = 0
+        for i in range(1, len(nodes)):
+            if nodes[i].val < nodes[minIdx].val:
+                minIdx = i
+        return minIdx
+
+    def mergeKLists(self, lists: List[ListNode]) -> ListNode:
+        shifter = [x for x in lists if x is not None]
+        head = ListNode()
+        mergeFront = head
+        while len(shifter) > 0:
+            nextNodeIdx = self.min_node(shifter)
+            mergeFront.next = shifter[nextNodeIdx]
+            mergeFront = mergeFront.next
+            if shifter[nextNodeIdx].next is None:
+                del shifter[nextNodeIdx]
+            else:
+                shifter[nextNodeIdx] = shifter[nextNodeIdx].next
+        return head.next
 
 class Q61:
     def q61_rotateRight(self, head: ListNode, k: int) -> ListNode:
@@ -242,20 +265,67 @@ class Q206:
             thisNode = nextNode
         return prvNode
 
-class Q527:
+class Q572:
+    def match(self, sNode: TreeNode, tNode: TreeNode) -> bool:
+        if sNode is None or tNode is None: 
+            return sNode is tNode
+        return (sNode.val == tNode.val) and self.match(sNode.left, tNode.left) and self.match(sNode.right, tNode.right)
+
     def isSubtree(self, s: TreeNode, t: TreeNode) -> bool:
-        currentNode = s
-        path = [s]
-        while len(path) > 0 and currentNode is not None:
-            if currentNode is None:
-                currentNode = path.pop().right
-            else:
-                print('{}, '.format(s.val))
-                path.append(currentNode)
-                currentNode = currentNode.left
+        if self.match(s, t):
+            return True
+        if s is None: 
+            return False
+        return self.isSubtree(s.left, t) or self.isSubtree(s.right, t)
+    
+    def isSubtreeV2(self, s: TreeNode, t: TreeNode) -> bool:
+        from hashlib import sha256
+        def hash_(x):
+            S = sha256()
+            S.update(x.encode('utf-8'))
+            return S.hexdigest()
+
+        def merkle(node: TreeNode):
+            if node is None:
+                return 'None'
+            mLeft = merkle(node.left)
+            mRight = merkle(node.right)
+            node.merkle = hash_(mLeft + str(node.val) + mRight)
+            return node.merkle
+        
+        def dfs_search_merkle(node: TreeNode) -> Union[TreeNode, bool]:
+            # search node in s that has the same merkle hash as t using dfs
+            if node is None: return False
+            if node.merkle == t.merkle:
+                return node
+            matchLeft = dfs_search_merkle(node.left)
+            if matchLeft: return matchLeft
+            matchRight = dfs_search_merkle(node.right)
+            if matchRight: return matchRight
+            return False
+
+        merkle(s)
+        merkle(t)
+        matchNode = dfs_search_merkle(s)
+        if matchNode:
+            return self.match(matchNode, t)
+        else:
+            return False
+
+class Q692:
+    def topKFrequent(self, words: List[str], k: int) -> List[str]:
+        frqDict = {}
+        for w in words:
+            frqDict[w] = frqDict.get(w, 0) - 1
+        topK = sorted(frqDict.items(), key = lambda x: (x[1], x[0]))[:k]
+        return [x[0] for x in topK]
+
+
+
 
 if __name__ == '__main__':
-    root = binary_tree([1, None, 2, None, 3, None, 4, None, None])
-    root.print()
+    test = [singly_list(x) for x in [[1,4,5],[1,3,4],[2,6]]]
+    q = Q23()
+    q.mergeKLists(test).print()
 
 
