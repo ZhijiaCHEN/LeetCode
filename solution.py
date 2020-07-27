@@ -1,4 +1,5 @@
 
+from heapq import heappushpop
 from typing import List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
@@ -320,12 +321,92 @@ class Q692:
         topK = sorted(frqDict.items(), key = lambda x: (x[1], x[0]))[:k]
         return [x[0] for x in topK]
 
+class Q42:
+    def trap(self, height: List[int]) -> int:
+        if len(height) == 0: return 0
+        sTrap = sum(height)
+        height = sorted([(i, x) for i, x in enumerate(height)], key = lambda x: x[1], reverse = True)
+        rIdx = height[0][0]
+        lIdx = height[0][0]
+        sTotal = height[0][1]
+        for i, x in height[1:]:
+            if x == 0: continue
+            if i > rIdx:
+                sTotal += x * (i - rIdx)
+                rIdx = i
+            elif i < lIdx:
+                sTotal += x * (lIdx - i)
+                lIdx = i
+        return sTotal - sTrap
+
+class Q20:
+    def isValid(self, s: str) -> bool:
+        parenStack = []
+        parenPair = {')': '(', '}': '{', ']': '['}
+        for c in s:
+            if c in ['(', '[', '{']:
+                parenStack.append(c)
+            elif c in [')', ']', '}']:
+                if (len(parenStack) == 0) or (parenStack[-1] != parenPair[c]):
+                    return False
+                else:
+                    parenStack.pop()
+
+        return len(parenStack) == 0
+
+class Q973:
+    def kClosest(self, points: List[List[int]], K: int) -> List[List[int]]:
+        """
+        We have a list of points on the plane. Find the K closest points to the origin (0, 0).
+        (Here, the distance between two points on a plane is the Euclidean distance.)
+        You may return the answer in any order. The answer is guaranteed to be unique (except for the order that it is in.)
+
+        Args:
+            points (List[List[int]]): list of points
+            K (int): top K closest points to return
+
+        Returns:
+            List[List[int]]: top K closest points
+
+        Example 1:
+
+        Input: points = [[1,3],[-2,2]], K = 1
+        Output: [[-2,2]]
+        Explanation: 
+        The distance between (1, 3) and the origin is sqrt(10).
+        The distance between (-2, 2) and the origin is sqrt(8).
+        Since sqrt(8) < sqrt(10), (-2, 2) is closer to the origin.
+        We only want the closest K = 1 points from the origin, so the answer is just [[-2,2]].
+
+        Example 2:
+
+        Input: points = [[3,3],[5,-1],[-2,4]], K = 2
+        Output: [[3,3],[-2,4]]
+        (The answer [[-2,4],[3,3]] would also be accepted.)
+
+        Note:
+
+            1 <= K <= points.length <= 10000
+            -10000 < points[i][0] < 10000
+            -10000 < points[i][1] < 10000
+        """
+        import heapq
+        distHeap = []
+        for x, y in points:
+            dist = -(x**2 + y**2)
+            if len(distHeap) < K:
+                heapq.heappush(distHeap, (dist, x, y))
+            else:
+                heappushpop(distHeap, (dist, x, y))
+        return [[d[1], d[2]] for d in distHeap]
+
+
 
 
 
 if __name__ == '__main__':
     test = [singly_list(x) for x in [[1,4,5],[1,3,4],[2,6]]]
-    q = Q23()
-    q.mergeKLists(test).print()
+    q = Q973()
+    print(q.kClosest([[1,3],[-2,2]], 1))
 
 
