@@ -1,5 +1,6 @@
 
 from heapq import heappushpop
+import heapq
 from typing import List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
@@ -357,38 +358,12 @@ class Q20:
 class Q973:
     def kClosest(self, points: List[List[int]], K: int) -> List[List[int]]:
         """
-        We have a list of points on the plane. Find the K closest points to the origin (0, 0).
-        (Here, the distance between two points on a plane is the Euclidean distance.)
-        You may return the answer in any order. The answer is guaranteed to be unique (except for the order that it is in.)
-
         Args:
             points (List[List[int]]): list of points
             K (int): top K closest points to return
 
         Returns:
             List[List[int]]: top K closest points
-
-        Example 1:
-
-        Input: points = [[1,3],[-2,2]], K = 1
-        Output: [[-2,2]]
-        Explanation: 
-        The distance between (1, 3) and the origin is sqrt(10).
-        The distance between (-2, 2) and the origin is sqrt(8).
-        Since sqrt(8) < sqrt(10), (-2, 2) is closer to the origin.
-        We only want the closest K = 1 points from the origin, so the answer is just [[-2,2]].
-
-        Example 2:
-
-        Input: points = [[3,3],[5,-1],[-2,4]], K = 2
-        Output: [[3,3],[-2,4]]
-        (The answer [[-2,4],[3,3]] would also be accepted.)
-
-        Note:
-
-            1 <= K <= points.length <= 10000
-            -10000 < points[i][0] < 10000
-            -10000 < points[i][1] < 10000
         """
         import heapq
         distHeap = []
@@ -399,14 +374,77 @@ class Q973:
             else:
                 heappushpop(distHeap, (dist, x, y))
         return [[d[1], d[2]] for d in distHeap]
+# 49. Group Anagrams
+class Q49:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        letr2Idx = {x:i for i, x in enumerate('abcdefghijklmnopqrstuvwxyz')}
+        letrCntDict = {}
+        for s in strs:
+            letrCnt = [0]*26
+            for c in s:
+                letrCnt[letr2Idx[c]] += 1
+            letrCnt = tuple(letrCnt)
+            if letrCnt in letrCntDict:
+                letrCntDict[letrCnt].append(s)
+            else:
+                letrCntDict[letrCnt] = [s]
+        return [x[1] for x in letrCntDict.items()]
 
+# 239. Sliding Window Maximum
+class Q239:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        winMax = max(nums[:k])
+        ret = [winMax]
+        for i, x in enumerate(nums[k:]):
+            i += k
+            if nums[i-k] == winMax:
+                winMax = max(nums[i-k+1: i+1])
+            elif nums[i] > winMax:
+                winMax = nums[i]
+            ret.append(winMax)
+        return ret
 
+# 295. Find Median from Data Stream
+class Q295:
+    def __init__(self):
+        import heapq
+        self.median = None
+        self.leftMaxHeap = []
+        self.rightMinHeap = []
+        self.even = True
 
+    def addNum(self, num: int) -> None:
+        if self.median is None:
+            self.median = num
+        else:
+            if self.even:
+                if num < -self.leftMaxHeap[0]:
+                    self.median = -heapq.heappushpop(self.leftMaxHeap, -num)
+                elif num > self.rightMinHeap[0]:
+                    self.median = heapq.heappushpop(self.rightMinHeap, num)
+                else:
+                    self.median = num
+            else:
+                if num < self.median:
+                    heapq.heappush(self.leftMaxHeap, -num)
+                    heapq.heappush(self.rightMinHeap, self.median)
+                else:
+                    heapq.heappush(self.leftMaxHeap, -self.median)
+                    heapq.heappush(self.rightMinHeap, num)
+                self.median = (self.rightMinHeap[0] - self.leftMaxHeap[0])/2
+        self.even = not self.even
 
+    def findMedian(self) -> float:
+        return self.median
 
 if __name__ == '__main__':
-    test = [singly_list(x) for x in [[1,4,5],[1,3,4],[2,6]]]
-    q = Q973()
-    print(q.kClosest([[1,3],[-2,2]], 1))
+    q = Q295()
+    print(q.findMedian())
+    q.addNum(1)
+    q.addNum(2)
+    print(q.findMedian())
+    q.addNum(3)
+    print(q.findMedian())
+
 
 
