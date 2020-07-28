@@ -437,14 +437,85 @@ class Q295:
     def findMedian(self) -> float:
         return self.median
 
+# 253. Meeting Rooms II
+class Q253:
+    def minMeetingRooms(self, intervals: List[List[int]]) -> int:
+        startTime = sorted([x[0] for x in intervals])
+        endTime = sorted(x[1] for x in intervals)
+        rmNum = 0
+        etIdx = 0
+        for st in startTime:
+            if st < endTime[etIdx]:
+                rmNum += 1
+            else:
+                etIdx += 1
+        return rmNum
+
+# 380. Insert Delete GetRandom O(1)
+class RandomizedSet:
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        from random import randint
+        self.data = dict()
+
+    def insert(self, val: int) -> bool:
+        """
+        Inserts a value to the set. Returns true if the set did not already contain the specified element.
+        """
+        if val in self.data:
+            return False
+        else:
+            self.data[val] = val
+            return True
+
+    def remove(self, val: int) -> bool:
+        """
+        Removes a value from the set. Returns true if the set contained the specified element.
+        """
+        if val in self.data:
+            self.data.pop(val)
+            return True
+        else:
+            return False
+
+    def getRandom(self) -> int:
+        """
+        Get a random element from the set.
+        """
+        return self.data[list(self.data.keys())[randint(0, len(self.data)-1)]]
+
+# 987. Vertical Order Traversal of a Binary Tree
+class Q987:
+    def verticalTraversal(self, root: TreeNode) -> List[List[int]]:
+        from queue import PriorityQueue
+        posCor = []
+        negCor = []
+        def visit_fun(node: TreeNode, x: int, y: int):
+            if node is None: return
+            if x >= 0:
+                if x + 1 > len(posCor):
+                    posCor.append([(y, node.val)])
+                else:
+                    posCor[x].append((y, node.val))
+            else:
+                if abs(x) > len(negCor):
+                    negCor.append([(y, node.val)])
+                else:
+                    negCor[abs(x) - 1].append((y, node.val))
+
+            visit_fun(node.left, x - 1, y + 1)
+            visit_fun(node.right, x + 1, y + 1)
+
+        visit_fun(root, 0, 0)
+        return [[y[1] for y in sorted(x)] for x in negCor[-1::-1]] + [[y[1] for y in sorted(x)] for x in posCor]
+
 if __name__ == '__main__':
-    q = Q295()
-    print(q.findMedian())
-    q.addNum(1)
-    q.addNum(2)
-    print(q.findMedian())
-    q.addNum(3)
-    print(q.findMedian())
+    q = Q987()
+    print(q.minMeetingRooms([[2,15],[36,45],[9,29],[16,23],[4,9]]
+))
 
 
 
