@@ -1,7 +1,7 @@
 
 from heapq import heappushpop
 import heapq
-from typing import List, Union, Tuple
+from typing import ChainMap, List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
 
@@ -512,10 +512,179 @@ class Q987:
         visit_fun(root, 0, 0)
         return [[y[1] for y in sorted(x)] for x in negCor[-1::-1]] + [[y[1] for y in sorted(x)] for x in posCor]
 
+# 937. Reorder Data in Log Files
+class Q937:
+    def reorderLogFiles(self, logs: List[str]) -> List[str]:
+        digLog = []
+        letLog = []
+        for log in logs:
+            spaceIdx = log.find(' ')
+            if log[spaceIdx + 1] in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
+                digLog.append(log)
+            else:
+                letLog.append((log[spaceIdx:], log[:spaceIdx]))
+        letLog = [x[1] + x[0] for x in sorted(letLog)]
+        return letLog + digLog
+
+# 146. LRU Cache
+class LRUCache:
+    class CacheNode:
+        def __init__(self, key: int, val: int, next = None, prev = None) -> None:
+            self.key = key
+            self.val = val
+            self.next = next
+            self.prev = prev
+        def print(self):
+            print('({}: {})->'.format(self.key, self.val), end = '')
+            p = self.next
+            while p is not None:
+                print('({}: {})->'.format(p.key, p.val), end = '')
+                p = p.next
+            print('NULL')
+    def __init__(self, capacity: int):
+        
+        self.cacheMap = dict()
+        self.LRU = None
+        self.MRU = None
+        self.capacity = capacity
+
+    def _update(self, node):
+        if node == self.LRU and node.key not in self.cacheMap:
+            # node evict
+            if self.capacity > 1:
+                self.LRU = self.LRU.prev
+                self.LRU.next = None
+
+                node.next = self.MRU
+                self.MRU.prev = node
+                self.MRU = node
+                self.MRU.prev = None
+            self.cacheMap[node.key] = node
+        elif node.key in self.cacheMap:
+            # node get or update
+            if len(self.cacheMap) > 1:
+                if node == self.LRU:
+                    self.LRU = self.LRU.prev
+                    self.LRU.next = None
+
+                    node.prev = node
+                    node.next = self.MRU
+                    self.MRU.prev = node
+                    self.MRU = node
+                    self.MRU.prev = None
+                elif node != self.MRU:
+                    node.next.prev = node.prev
+                    node.prev.next = node.next
+                    node.next = self.MRU
+                    self.MRU.prev = node
+                    self.MRU = node
+                    self.MRU.prev = None
+        else:
+            # new node
+            if len(self.cacheMap) == 0:
+                self.LRU = node
+                self.MRU = node
+            else:
+                node.next = self.MRU
+                self.MRU.prev = node
+                self.MRU = node
+            self.cacheMap[node.key] = node
+
+    def get(self, key: int) -> int:
+        if key in self.cacheMap:
+            node = self.cacheMap[key]
+            self._update(node)
+            return node.val
+        else:
+            return -1
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cacheMap:
+            # update cache
+            node = self.cacheMap[key]
+            node.val = value
+        else:
+            # new cache
+            if len(self.cacheMap) == self.capacity:
+                # need an eviction
+                node = self.cacheMap.pop(self.LRU.key)
+                node.key = key
+                node.val = value
+            else:
+                #create a new node
+                node = self.CacheNode(key, value)
+        self._update(node)
+
+def lru_cache_test(input: List[List[int]], expected: List[Union[int, None]]):
+    cache = LRUCache(input[0][0])
+    for i, (x, y) in enumerate(zip(input[1:], expected[1:])):
+        # if i == 53:
+        #     print('')
+        if len(x) == 1:
+            #print('get {}'.format(x[0]))
+            yOut = cache.get(x[0])
+        else:
+            #print('put {}'.format(x))
+            yOut = cache.put(x[0], x[1])
+        if yOut == y or yOut is y:
+            cache.MRU.print()
+        else:
+            print('error')
+
+# 273. Integer to English Words
+# class Q273:
+#     def numberToWords(self, num: int) -> str:
+#         singleDigit2Word = {'0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four', '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine'}
+#         doubleDigit2Word = {'0': 'And', '2': 'Twenty', '3': 'Thirty', '4': 'Forty', '5': 'Fifty', '6': 'Sixty', '7': 'Seventy', '8': 'Eighty', '9': 'Ninety'}
+#         teens2Word = {'0': 'teen', '1': 'Eleven', '2': 'Twelve', '3': 'Thirteen', '4': 'Fourteen', '5': 'Fifteen', '6': 'Sixteen', '7': 'Seventeen', '8': 'Eightteen', '9': 'Nineteen'}
+#         units = ['', 'Thousand', 'Million', 'Billion']
+#         out = []
+#         num = str(num)[-1::-1]
+#         i = 0
+#         while i < len(num):
+#             if i%3 == 0:
+#                 if (i + 1) < len(num) and num[i + 1] == '1':
+#                     out.append(teens2Word[num[i]])
+#                     i += 1
+#                 else:
+#                     out.append(singleDigit2Word[num[i]])
+#                 i += 1
+#                 out.append(units[int(i/3)])
+#             elif i%3 == 1:
+
+# 21. Merge Two Sorted Lists
+class Q21:
+    def mergeTwoLists(self, l1: ListNode, l2: ListNode) -> ListNode:
+        if (l1 is None) and (l2 is None):
+            return None
+        p1 = l1
+        p2 = l2
+        mp = ListNode(-1)
+        ret = mp
+        while(p1 or p2):
+            if p1 is None:
+                mp.next = p2
+                p2 = p2.next
+            elif p2 is None:
+                mp.next = p1
+                p1 = p1.next
+            else:
+                if p1.val < p2.val:
+                    mp.next = p1
+                    p1 = p1.next
+                else:
+                    mp.next = p2
+                    p2 = p2.next
+            mp = mp.next
+        return ret.next
+
+
 if __name__ == '__main__':
-    q = Q987()
-    print(q.minMeetingRooms([[2,15],[36,45],[9,29],[16,23],[4,9]]
-))
+    lru_cache_test([[10],[10,13],[3,17],[6,11],[10,5],[9,10],[13],[2,19],[2],[3],[5,25],[8],[9,22],[5,5],[1,30],[11],[9,12],[7],[5],[8],[9],[4,30],[9,3],[9],[10],[10],[6,14],[3,1],[3],[10,11],[8],[2,14],[1],[5],[4],[11,4],[12,24],[5,18],[13],[7,23],[8],[12],[3,27],[2,12],[5],[2,9],[13,4],[8,18],[1,7],[6],[9,29],[8,21],[5],[6,30],[1,12],[10],[4,15],[7,22],[11,26],[8,17],[9,29],[5],[3,4],[11,30],[12],[4,29],[3],[9],[6],[3,4],[1],[10],[3,29],[10,28],[1,20],[11,13],[3],[3,12],[3,8],[10,9],[3,26],[8],[7],[5],[13,17],[2,27],[11,15],[12],[9,19],[2,15],[3,16],[1],[12,17],[9,1],[6,19],[4],[5],[5],[8,1],[11,7],[5,2],[9,28],[1],[2,2],[7,4],[4,22],[7,24],[9,26],[13,28],[11,26]], [None,None,None,None,None,None,-1,None,19,17,None,-1,None,None,None,-1,None,-1,5,-1,12,None,None,3,5,5,None,None,1,None,-1,None,30,5,30,None,None,None,-1,None,-1,24,None,None,18,None,None,None,None,-1,None,None,18,None,None,-1,None,None,None,None,None,18,None,None,-1,None,4,29,30,None,12,-1,None,None,None,None,29,None,None,None,None,17,22,18,None,None,None,-1,None,None,None,20,None,None,None,-1,18,18,None,None,None,None,20,None,None,None,None,None,None,None])
+    # q.put(4,4)
+    # print(q.get(1))
+    # print(q.get(3))
+    # print(q.get(4))
 
 
 
