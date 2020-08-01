@@ -678,9 +678,136 @@ class Q21:
             mp = mp.next
         return ret.next
 
+# 863. All Nodes Distance K in Binary Tree
+class Q863:
+    def distanceK(self, root: TreeNode, target: TreeNode, K: int) -> List[int]:
+        adjacentMap = {}
+        distK = []
+        def tree_visit(parentNode: TreeNode, currentNode: TreeNode):
+            adjacentMap[currentNode.val] = set()
+            
+            if parentNode is not None:
+                adjacentMap[currentNode.val].add(parentNode.val)
+            if currentNode.left is not None:
+                adjacentMap[currentNode.val].add(currentNode.left.val)
+                tree_visit(currentNode, currentNode.left)
+            if currentNode.right is not None:
+                adjacentMap[currentNode.val].add(currentNode.right.val)
+                tree_visit(currentNode, currentNode.right)
+            
+        def graph_visit(nodeVal: int, distance: int):
+            if distance == K:
+                distK.append(nodeVal)
+            else:
+                for val in adjacentMap[nodeVal]:
+                    adjacentMap[val].remove(nodeVal)
+                    graph_visit(val, distance + 1)
+        
+        tree_visit(None, root)
+        graph_visit(target.val, 0)
+
+        return distK
+
+# 269. Alien Dictionary
+class Q269:
+    class MyNode:
+        def __init__(self, c: str) -> None:
+            self.inBound = set()
+            self.outBound = set()
+            self.val = c
+
+    def alienOrder(self, words: List[str]) -> str:
+        letGraph = {c: self.MyNode(c) for w in words for c in w}
+        for w1, w2 in zip(words, words[1:]):
+            for c1, c2 in zip(w1, w2):
+                if c1 != c2:
+                    letGraph[c1].outBound.add(c2)
+                    letGraph[c2].inBound.add(c1)
+                    break
+
+        letSorted = ""
+        for x in list(letGraph.keys()):
+            node = letGraph[x]
+            if len(node.inBound) + len(node.outBound) == 0:
+                letGraph.pop(x)
+
+        while len(letGraph) > 0:
+            cycle = True
+            for x in list(letGraph.keys()):
+                if len(letGraph[x].inBound) == 0:
+                    cycle = False
+                    node = letGraph.pop(x)
+                    letSorted += x
+                    for y in node.outBound:
+                        letGraph[y].inBound.remove(x)
+            if cycle:
+                return ""
+        return letSorted
+
+# 297. Serialize and Deserialize Binary Tree
+class Codec:
+    def serialize(self, root):
+        """Encodes a tree to a single string.
+        
+        :type root: TreeNode
+        :rtype: str
+        """
+        from collections import deque
+        visitQ = deque([root])
+        ret = []
+        while len(visitQ) > 0:
+            node = visitQ.pop()
+            if node is None:
+                ret.append("null")
+            else:
+                ret.append(str(node.val))
+                visitQ.appendleft(node.left)
+                visitQ.appendleft(node.right)
+        endIdx = len(ret) - 1
+        while endIdx >= 0 and ret[endIdx] == "null":
+            endIdx -= 1
+        return "[{}]".format(','.join(ret[:endIdx+1]))
+
+
+    def deserialize(self, data):
+        """Decodes your encoded data to tree.
+        
+        :type data: str
+        :rtype: TreeNode
+        """
+        from collections import deque
+        def str2node(s: str):
+            if s == "null":
+                return None
+            else:
+                return TreeNode(val = int(s))
+        data = data[1:-1]
+        if len(data) == 0:
+            return None
+        else:
+            data = deque(data.split(',')[-1::-1])
+        root = str2node(data.pop())
+        visitQ = deque([root])
+        while len(visitQ) > 0:
+            node = visitQ.pop()
+            if len(data) > 0:
+                node.left = str2node(data.pop())
+            else:
+                node.left = str2node("null")
+            if len(data) > 0:
+                node.right = str2node(data.pop())
+            else:
+                node.right = str2node("null")
+            if node.left:
+                visitQ.appendleft(node.left)
+            if node.right:
+                visitQ.appendleft(node.right)
+        return root
 
 if __name__ == '__main__':
-    lru_cache_test([[10],[10,13],[3,17],[6,11],[10,5],[9,10],[13],[2,19],[2],[3],[5,25],[8],[9,22],[5,5],[1,30],[11],[9,12],[7],[5],[8],[9],[4,30],[9,3],[9],[10],[10],[6,14],[3,1],[3],[10,11],[8],[2,14],[1],[5],[4],[11,4],[12,24],[5,18],[13],[7,23],[8],[12],[3,27],[2,12],[5],[2,9],[13,4],[8,18],[1,7],[6],[9,29],[8,21],[5],[6,30],[1,12],[10],[4,15],[7,22],[11,26],[8,17],[9,29],[5],[3,4],[11,30],[12],[4,29],[3],[9],[6],[3,4],[1],[10],[3,29],[10,28],[1,20],[11,13],[3],[3,12],[3,8],[10,9],[3,26],[8],[7],[5],[13,17],[2,27],[11,15],[12],[9,19],[2,15],[3,16],[1],[12,17],[9,1],[6,19],[4],[5],[5],[8,1],[11,7],[5,2],[9,28],[1],[2,2],[7,4],[4,22],[7,24],[9,26],[13,28],[11,26]], [None,None,None,None,None,None,-1,None,19,17,None,-1,None,None,None,-1,None,-1,5,-1,12,None,None,3,5,5,None,None,1,None,-1,None,30,5,30,None,None,None,-1,None,-1,24,None,None,18,None,None,None,None,-1,None,None,18,None,None,-1,None,None,None,None,None,18,None,None,-1,None,4,29,30,None,12,-1,None,None,None,None,29,None,None,None,None,17,22,18,None,None,None,-1,None,None,None,20,None,None,None,-1,18,18,None,None,None,None,20,None,None,None,None,None,None,None])
+    q = Codec()
+    print(q.serialize(None))
+    print(q.serialize(q.deserialize("[]")))
     # q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
