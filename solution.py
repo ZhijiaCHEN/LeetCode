@@ -804,10 +804,70 @@ class Codec:
                 visitQ.appendleft(node.right)
         return root
 
+# 1192. Critical Connections in a Network
+class Q1192:
+    def criticalConnections(self, n: int, connections: List[List[int]]) -> List[List[int]]:
+        adjacentMap = {i: set() for i in range(n)}
+        for c in connections:
+            adjacentMap[c[0]].add(c[1])
+            adjacentMap[c[1]].add(c[0])
+        #minRank = {x: -1 for x in adjacentMap}
+        pathRank = {x: -1 for x in adjacentMap}
+
+        criCon = []
+        def dfs(s: int, rank: int) -> int:
+            pathRank[s] = rank
+            minRank = n
+            for c in adjacentMap[s]:
+                if pathRank[c] >= 0:
+                    cRank = pathRank[c]
+                else:
+                    adjacentMap[c].remove(s)
+                    cRank = dfs(c, rank + 1)
+                if cRank > pathRank[s]:
+                    criCon.append([s, c])
+                minRank = min(minRank, cRank)
+
+            return minRank
+        dfs(0, 0)
+        return criCon
+
+import collections
+class Solution(object):
+    def criticalConnections(self, n, connections):
+        def makeGraph(connections):
+            graph = collections.defaultdict(list)
+            for conn in connections:
+                graph[conn[0]].append(conn[1])
+                graph[conn[1]].append(conn[0])
+            return graph
+
+        graph = makeGraph(connections)
+        connections = set(map(tuple, (map(sorted, connections))))
+        rank = [-2] * n
+
+        def dfs(node, depth):
+            if rank[node] >= 0:
+                # visiting (0<=rank<n), or visited (rank=n)
+                return rank[node]
+            rank[node] = depth
+            min_back_depth = n
+            for neighbor in graph[node]:
+                if rank[neighbor] == depth - 1:
+                    continue  # don't immmediately go back to parent. that's why i didn't choose -1 as the special value, in case depth==0.
+                back_depth = dfs(neighbor, depth + 1)
+                if back_depth <= depth:
+                    connections.discard(tuple(sorted((node, neighbor))))
+                min_back_depth = min(min_back_depth, back_depth)
+            #rank[node] = n  # this line is not necessary. see the "brain teaser" section below
+            return min_back_depth
+            
+        dfs(0, 0)  # since this is a connected graph, we don't have to loop over all nodes.
+        return list(connections)
+
 if __name__ == '__main__':
-    q = Codec()
-    print(q.serialize(None))
-    print(q.serialize(q.deserialize("[]")))
+    q = Solution()
+    print(q.criticalConnections(5, [[1,0],[2,0],[3,2],[4,2],[4,3],[3,0],[4,0]]))
     # q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
