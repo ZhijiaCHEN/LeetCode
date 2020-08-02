@@ -1,7 +1,7 @@
 
 from heapq import heappushpop
 import heapq
-from typing import ChainMap, List, Union, Tuple
+from typing import ChainMap, Collection, List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
 
@@ -807,67 +807,91 @@ class Codec:
 # 1192. Critical Connections in a Network
 class Q1192:
     def criticalConnections(self, n: int, connections: List[List[int]]) -> List[List[int]]:
-        adjacentMap = {i: set() for i in range(n)}
+        adjacentMap = {i: [] for i in range(n)}
         for c in connections:
-            adjacentMap[c[0]].add(c[1])
-            adjacentMap[c[1]].add(c[0])
-        #minRank = {x: -1 for x in adjacentMap}
-        pathRank = {x: -1 for x in adjacentMap}
-
+            adjacentMap[c[0]].append(c[1])
+            adjacentMap[c[1]].append(c[0])
+        minRank = {x: -1 for x in adjacentMap}
         criCon = []
-        def dfs(s: int, rank: int) -> int:
-            pathRank[s] = rank
-            minRank = n
+        def dfs(s: int, rank: int, p: int) -> int:
+            #global minRank
+            minRank[s] = rank
             for c in adjacentMap[s]:
-                if pathRank[c] >= 0:
-                    cRank = pathRank[c]
+                if c == p: continue
+                if minRank[c] >= 0:
+                    cRank = minRank[c]
                 else:
-                    adjacentMap[c].remove(s)
-                    cRank = dfs(c, rank + 1)
-                if cRank > pathRank[s]:
-                    criCon.append([s, c])
-                minRank = min(minRank, cRank)
+                    cRank = dfs(c, rank + 1, s)
+                minRank[s] = min(minRank[s], cRank)
+            if minRank[s] >= rank and p >= 0:
+                criCon.append([p, s])
 
-            return minRank
-        dfs(0, 0)
+            return minRank[s]
+        dfs(0, 0, -1)
         return criCon
+# 200. Number of Islands
+class Q200:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        if len(grid) == 0 or len(grid[0]) == 0:
+            return 0
+        rNum = len(grid)
+        cNum = len(grid[0])
+        def dfs(r: int, c: int):
+            if r >= 0 and r < rNum and c >= 0 and c < cNum:
+                if grid[r][c] == "1":
+                    grid[r][c] = 0
+                    dfs(r + 1, c)
+                    dfs(r, c + 1)
+                    dfs(r - 1, c)
+                    dfs(r, c - 1)
+        ret = 0
+        for r in range(rNum):
+            for c in range(cNum):
+                if grid[r][c] == "1":
+                    ret += 1
+                    dfs(r, c)
+        
+        return ret
 
-import collections
-class Solution(object):
-    def criticalConnections(self, n, connections):
-        def makeGraph(connections):
-            graph = collections.defaultdict(list)
-            for conn in connections:
-                graph[conn[0]].append(conn[1])
-                graph[conn[1]].append(conn[0])
-            return graph
+# 994. Rotting Oranges
+class Q994:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        from collections import deque
+        if len(grid) == 0 or len(grid[0]) == 0:
+            return 0
+        rNum = len(grid)
+        cNum = len(grid[0])
+        freshCnt = 0
+        rotten = deque()
+        for r in range(rNum):
+            for c in range(cNum):
+                if grid[r][c] == 1:
+                    freshCnt += 1
+                elif grid[r][c] == 2:
+                    rotten.append((r, c))
+        rottenTime = 0
+        
+        while rotten and freshCnt > 0:
+            rottenTime += 1
+            for _ in range(len(rotten)):
+                r, c = rotten.popleft()
+                for dr, dc in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
+                    rr = r + dr
+                    cc = c + dc
+                    if rr < 0 or rr == rNum or cc < 0 or cc == cNum: continue
+                    if grid[rr][cc] == 1:
+                        grid[rr][cc] = 2
+                        freshCnt -= 1
+                        rotten.append((rr, cc))
+        if freshCnt > 0:
+            return -1
+        else:
+            return rottenTime
 
-        graph = makeGraph(connections)
-        connections = set(map(tuple, (map(sorted, connections))))
-        rank = [-2] * n
-
-        def dfs(node, depth):
-            if rank[node] >= 0:
-                # visiting (0<=rank<n), or visited (rank=n)
-                return rank[node]
-            rank[node] = depth
-            min_back_depth = n
-            for neighbor in graph[node]:
-                if rank[neighbor] == depth - 1:
-                    continue  # don't immmediately go back to parent. that's why i didn't choose -1 as the special value, in case depth==0.
-                back_depth = dfs(neighbor, depth + 1)
-                if back_depth <= depth:
-                    connections.discard(tuple(sorted((node, neighbor))))
-                min_back_depth = min(min_back_depth, back_depth)
-            #rank[node] = n  # this line is not necessary. see the "brain teaser" section below
-            return min_back_depth
-            
-        dfs(0, 0)  # since this is a connected graph, we don't have to loop over all nodes.
-        return list(connections)
 
 if __name__ == '__main__':
-    q = Solution()
-    print(q.criticalConnections(5, [[1,0],[2,0],[3,2],[4,2],[4,3],[3,0],[4,0]]))
+    q = Q994()
+    print(q.orangesRotting([[0,2]]))
     # q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
