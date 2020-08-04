@@ -1001,10 +1001,125 @@ class Q53:
                 currentSum = 0
         return ret
 
-            
+# 124. Binary Tree Maximum Path Sum
+class Q124:
+    def maxPathSum(self, root: TreeNode) -> int:
+        def dfs(node: TreeNode):
+            from math import inf
+            if node is None: return
+            dfs(node.left)
+            dfs(node.right)
+
+            cumSumL = node.val
+            cumSumR = node.val
+            maxSumL = -inf
+            maxSumR = -inf
+            if node.left:
+                cumSumL += node.left.cumSum
+                maxSumL = node.left.maxSum
+            if node.right:
+                cumSumR += node.right.cumSum
+                maxSumR = node.right.maxSum
+            node.cumSum = max(cumSumL, cumSumR, 0)
+            node.maxSum = max(node.val, cumSumL, cumSumR, cumSumL + cumSumR - node.val, maxSumL, maxSumR)
+        
+        dfs(root)
+        return root.maxSum
+
+# 33. Search in Rotated Sorted Array
+class Q33:
+    def search(self, nums: List[int], target: int) -> int:
+        if len(nums) == 0:
+            return -1
+        iMin = 0
+        iMax = len(nums) - 1
+        iPiv = -1
+        while iMax - iMin > 1:
+            iMid = int((iMin+iMax+1)/2)
+            if nums[iMid] > nums[0]:
+                iMin = iMid
+            elif nums[iMid - 1] < nums[0]:
+                iMax = iMid
+            else:
+                iPiv = iMid
+                break
+        if iPiv == -1:
+            if iMin > 0 and nums[iMin] < nums[0] and nums[iMin - 1] >= nums[0]:
+                iPiv = iMin
+            elif iMax > 0 and nums[iMax] < nums[0] and nums[iMax - 1] >= nums[0]:
+                iPiv = iMax
+        if iPiv > 0:
+            nums = nums[iPiv:] + nums[:iPiv]
+        iMin = 0
+        iMax = len(nums) - 1
+        iTarget = -1
+        while iMax - iMin > 1:
+            iMid = int((iMin+iMax+1)/2)
+            if nums[iMid] > target:
+                iMax = iMid
+            elif nums[iMid] < target:
+                iMin = iMid
+            else:
+                iTarget = iMid
+                break
+
+        if iTarget == -1:
+            if nums[iMin] == target:
+                iTarget = iMin
+            elif nums[iMax] == target:
+                iTarget = iMax
+            else:
+                return -1
+        if iPiv == -1:
+            return iTarget
+        shiftL = len(nums) - iPiv
+        if iTarget < shiftL:
+            iTarget += iPiv
+        else:
+            iTarget -= shiftL
+        return iTarget
+
+# 981. Time Based Key-Value Store
+class TimeMap:
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.keyMap = {}
+    def set(self, key: str, value: str, timestamp: int) -> None:
+        if key in self.keyMap:
+            self.keyMap[key].append((timestamp, value))
+        else:
+            self.keyMap[key] = [(timestamp, value)]
+
+    def get(self, key: str, timestamp: int) -> str:
+        if key not in self.keyMap:
+            return ""
+        else:
+            q = self.keyMap[key]
+            if q[0][0] > timestamp: return ""
+            iMin = 0
+            iMax = len(q) - 1
+            iMid = 0
+            while iMax - iMin > 1:
+                iMid = int((iMin + iMax + 1)/2)
+                if q[iMid][0] > timestamp:
+                    iMax = iMid
+                elif q[iMid][0] < timestamp:
+                    iMin = iMid
+            if q[iMin][0] <= timestamp and q[iMid][0] > timestamp:
+                return q[iMin][1]
+            if q[iMax][0] <= timestamp:
+                return q[iMax][1]
+            return q[iMid][1]
 if __name__ == '__main__':
-    q = Q53()
-    print(q.maxSubArray([-2,1,-3,4,-1,2,1,-5,4]))
+    q = TimeMap()
+    inputs = [[],["foo","bar",1],["foo",1],["foo",3],["foo","bar2",4],["foo",4],["foo",5]]
+    for x in inputs[1:]:
+        if len(x) == 3:
+            print(q.set(*x))
+        if len(x) == 2:
+            print(q.get(*x))
 
     # q.put(4,4)
     # print(q.get(1))
