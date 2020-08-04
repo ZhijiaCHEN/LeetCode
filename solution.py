@@ -1,4 +1,5 @@
 
+from collections import deque
 from heapq import heappushpop
 import heapq
 from typing import ChainMap, Collection, List, Union, Tuple
@@ -829,6 +830,7 @@ class Q1192:
             return minRank[s]
         dfs(0, 0, -1)
         return criCon
+
 # 200. Number of Islands
 class Q200:
     def numIslands(self, grid: List[List[str]]) -> int:
@@ -888,10 +890,122 @@ class Q994:
         else:
             return rottenTime
 
+# 773. Sliding Puzzle
+class Q773:
+    class MyNode:
+        def __init__(self, board: List[List[int]]) -> None:
+            self.key = tuple(board[0] + board[1])
+            self.child = []
 
+    def generate_graph(self, root):
+        from collections import deque
+        q = deque([root])
+        existingState = set([root.key])
+        while len(q) > 0:
+            state = q.popleft()
+            zeroIdx = state.key.index(0)
+            if zeroIdx > 2:
+                r = 1
+            else:
+                r = 0
+            c = zeroIdx % 3
+            for dr, dc in [(0, 1), (1, 0), (0, -1), (-1 ,0)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < 2 and cc >= 0 and cc < 3:
+                    nextState = [list(state.key[:3]), list(state.key[3:])]
+                    nextState[r][c] = nextState[rr][cc]
+                    nextState[rr][cc] = 0
+                    nextState = self.MyNode(nextState)
+                    if nextState.key in existingState: continue
+                    existingState.add(nextState.key)
+                    state.child.append(nextState)
+                    q.append(nextState)
+
+    def slidingPuzzle(self, board: List[List[int]]) -> int:
+        from collections import deque
+        target = (1,2,3,4,5,0)
+        root = self.MyNode(board)
+        if root.key == target: return 0
+        self.generate_graph(root)
+
+        q = deque([root])
+        dist = -1
+        while len(q) > 0:
+            dist += 1
+            for _ in range(len(q)):
+                state = q.popleft()
+                if state.key == target: return dist
+                for child in state.child:
+                    q.append(child)
+        return -1
+
+# 4. Median of Two Sorted Arrays
+class Q4:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+        from math import ceil, floor
+        if len(nums2) < len(nums1):
+            tmp = nums1
+            nums1 = nums2
+            nums2 = tmp
+        l1 = len(nums1)
+        l2 = len(nums2)
+        l = l1 + l2
+
+        # if l1 == 0:
+        #     if len(nums2) % 2 == 0:
+        #         return (nums2[int(l2/2)] + nums2[int(l2/2)-1])/2
+        #     else:
+        #         return nums2[int((l2-1)/2)]
+
+        iMin = 0
+        iMax = l1
+        halfL = floor((l1 + l2 + 1)/2)
+        while True:
+            i = floor((iMin + iMax)/2)
+            j = halfL - i
+            if i < l1 and nums1[i] < nums2[j - 1]:
+                iMin = i + 1
+            elif i > 0 and nums1[i - 1] > nums2[j]:
+                iMax = i - 1
+            else:
+                if i == 0:
+                    maxL = nums2[j - 1]
+                elif j == 0:
+                    maxL = nums1[i - 1] 
+                else:
+                    maxL = max(nums1[i - 1], nums2[j - 1])
+
+                if l % 2 == 1:
+                    return maxL
+                
+                if i == l1:
+                    minR = nums2[j]
+                elif j == l2:
+                    minR = nums1[i]
+                else:
+                    minR = min(nums1[i], nums2[j])
+
+                return (maxL + minR)/2
+
+# 53. Maximum Subarray
+class Q53:
+    def maxSubArray(self, nums: List[int]) -> int:
+        ret = nums[0]
+        currentSum = 0
+        for x in nums:
+            currentSum += x
+            if currentSum > ret:
+                ret = currentSum
+            if currentSum < 0:
+                currentSum = 0
+        return ret
+
+            
 if __name__ == '__main__':
-    q = Q994()
-    print(q.orangesRotting([[0,2]]))
+    q = Q53()
+    print(q.maxSubArray([-2,1,-3,4,-1,2,1,-5,4]))
+
     # q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
