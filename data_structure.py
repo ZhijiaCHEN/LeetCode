@@ -19,7 +19,7 @@ class TreeNode:
             self.right.print()
 
 class ListNode:
-    def __init__(self, data: Union[int, Tuple[int, Union[int, None]], List[Union[int, None]]] = 0, next: 'ListNode' = None, random: 'ListNode' = None):
+    def __init__(self, data: Union[int, Tuple[int, Union[int, None]], List[Union[int, None]]] = 0, next: 'ListNode' = None, prev: 'ListNode' = None, random: 'ListNode' = None):
         if type(data) in [tuple, list]:
             assert len(data) == 2
             self.val = data[0]

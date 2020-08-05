@@ -1196,7 +1196,10 @@ class Solution:
         for i, (pp, qq) in enumerate(zip(pPath, qPath)):
             if pp != qq:
                 return pPath[i - 1]
-        return root
+        if len(pPath) < len(qPath):
+            return pPath[-1]
+        else:
+            return qPath[-1]
 
 
 
