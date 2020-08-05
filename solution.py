@@ -1112,14 +1112,99 @@ class TimeMap:
             if q[iMax][0] <= timestamp:
                 return q[iMax][1]
             return q[iMid][1]
+
+# 199. Binary Tree Right Side View
+class Q199:
+    def rightSideView(self, root: TreeNode) -> List[int]:
+        ret = []
+        def dfs(node: TreeNode, depth: int, nextDepth: int):
+            if node is None:
+                return nextDepth
+            if depth == nextDepth:
+                ret.append(node.val)
+                nextDepth += 1
+            nextDepth = dfs(node.right, depth + 1, nextDepth)
+            nextDepth = dfs(node.left, depth + 1, nextDepth)
+            
+            return nextDepth
+        dfs(root, 0, 0)
+        return ret
+
+# 212. Word Search II
+class Q212:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        if len(board) == 0 or len(board[0]) == 0 or len(words) == 0:
+            return []
+        trie ={}
+        rNum = len(board)
+        cNum = len(board[0])
+        EDW = "$"
+        for word in words:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EDW] = word
+        
+        ret = []
+        def backtrack(r: int, c: int, parent: dict):
+            char = board[r][c]
+            node = parent[char]
+            word = node.pop(EDW, False)
+            if word:
+                ret.append(word)
+
+            board[r][c] = '#'
+            for dr, dc in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < rNum and cc >= 0 and cc < cNum:
+                    if board[rr][cc] in node:
+                        backtrack(rr, cc, node)
+            board[r][c] = char
+            if len(node) == 0:
+                parent.pop(char)
+        for r in range(rNum):
+            for c in range(cNum):
+                if board[r][c] in trie:
+                    backtrack(r, c, trie)
+        return ret
+
+# 236. Lowest Common Ancestor of a Binary Tree
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        pHit, qHit = False, False
+        pPath = []
+        qPath = []
+        path = []
+        def dfs(node: TreeNode):
+            nonlocal pHit, qHit, path, pPath, qPath
+            path.append(node)
+            if node.val == p.val:
+                pHit = True
+                pPath = [x for x in path]
+            if node.val == q.val:
+                qHit = True
+                qPath = [x for x in path]
+            if not (pHit and qHit):
+                if node.left:
+                    dfs(node.left)
+                if node.right:
+                    dfs(node.right)
+            path.pop()
+        dfs(root)
+
+        for i, (pp, qq) in enumerate(zip(pPath, qPath)):
+            if pp != qq:
+                return pPath[i - 1]
+        return root
+
+
+
+
+
 if __name__ == '__main__':
-    q = TimeMap()
-    inputs = [[],["foo","bar",1],["foo",1],["foo",3],["foo","bar2",4],["foo",4],["foo",5]]
-    for x in inputs[1:]:
-        if len(x) == 3:
-            print(q.set(*x))
-        if len(x) == 2:
-            print(q.get(*x))
+    q = Q212()
+    print(q.findWords([["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], ["oath","pea","eat","rain"]))
 
     # q.put(4,4)
     # print(q.get(1))
