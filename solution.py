@@ -1170,7 +1170,7 @@ class Q212:
         return ret
 
 # 236. Lowest Common Ancestor of a Binary Tree
-class Solution:
+class Q236:
     def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
         pHit, qHit = False, False
         pPath = []
@@ -1201,13 +1201,167 @@ class Solution:
         else:
             return qPath[-1]
 
+# 472. Concatenated Words
+class Q472:
+    def findAllConcatenatedWordsInADict(self, words: List[str]) -> List[str]:
+        trie = {}
+        words.sort(key = lambda x: len(x))
+        EOW = '$'
+        for word in words:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EOW] = {}
+
+        concatNum = {'': 0}
+        def concat_num(word: str) -> bool:
+            if word in concatNum:
+                return concatNum[word]
+
+            node = trie
+            for i, char in enumerate(word):
+                if char not in node:
+                    return 0
+                node = node[char]
+                if EOW in node:
+                    n = concat_num(word[i + 1:])
+                    if n > 0:
+                        return n + 1
+            if EOW in node: 
+                return 1
+            else:
+                return 0
+
+        ret = []
+        for word in words:
+            if len(word) == 0: continue
+            n = concat_num(word)
+            concatNum[word] = n
+            if n > 1:
+                ret.append(word)
+        return ret
+
+# 126. Word Ladder II
+class Q126:
+    class WordNode:
+        def __init__(self, word: str) -> None:
+            self.word = word
+            self.used = False
+    def findLadders(self, beginWord: str, endWord: str, wordList: List[str]) -> List[List[str]]:
+        from collections import deque
+        trie = {}
+        for word in [beginWord] + wordList:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+        word2Node = {w: self.WordNode(w) for w in [beginWord] + wordList}
+        adjacentMap = {}
+        # def backtrack(charIdx: int, matched: str, parent: dict, wildAvail: bool) -> Union[str, None]:
+        #     nonlocal q, matchingWord
+        #     if wildAvail:
+        #         for char in parent:
+        #             node = parent[char]
+        #             if char == matchingWord[charIdx]: continue 
+        #             if len(node) == 0:
+        #                 matched += char
+        #                 if matched not in existingWords:
+        #                     q.appendleft(matched)
+        #                     adjacentMap[matchingWord].append(matched)
+        #                 return
+        #             else:
+        #                 backtrack(charIdx + 1, matched + char, node, False)
+
+        #         char = matchingWord[charIdx]
+        #         if char in parent:
+        #             node = parent[char]
+        #             if len(node) == 0:
+        #                 parent.pop(char)
+        #             else:
+        #                 backtrack(charIdx + 1, matched + char, node, True)
+        #                 if len(node) == 0:
+        #                     parent.pop(char)
+        #     else:
+        #         char = matchingWord[charIdx]
+        #         matched += char
+        #         if char not in parent: return
+        #         node = parent[char]
+        #         if len(node) == 0:
+        #             if matched not in existingWords:
+        #                 q.appendleft(matched)
+        #                 adjacentMap[matchingWord].append(matched)
+        #                 return
+        #         else:
+        #             backtrack(charIdx + 1, matched, node, False)
+        def backtrack(charIdx: int, matched: str, parent: dict, wildAvail: bool) -> None:
+            nonlocal matchingWord
+            for char in parent:
+                node = parent[char]
+                if char == matchingWord[charIdx]:
+                    if len(node) == 0:
+                        if not wildAvail:
+                            adjacentMap[matchingWord].append(word2Node[matched + char])
+                    else:
+                        backtrack(charIdx + 1, matched + char, node, wildAvail)
+                else:
+                    if wildAvail:
+                        if len(node) == 0:
+                            adjacentMap[matchingWord].append(word2Node[matched + char])
+                        else:
+                            backtrack(charIdx + 1, matched + char, node, False)
+
+        # def backtrack(thisChar: str, nextCharIdx: int, matched: str, parent: dict, wildAvail: bool) -> Union[str, None]:
+        #     nonlocal q, matchingWord
+        #     node = parent[thisChar]
+        #     if len(node) == 0:
+        #         if wildAvail:
+        #             # a word itself is match in the trie, remove it
+        #             parent.pop(thisChar)
+        #             return
+        #         else:
+        #             # a neighboring word is found
+        #             q.appendleft(matched + thisChar)
+        #             return
+
+        #     if wildAvail:
+        #         for nextChar in node:
+        #             if nextChar == matchingWord[nextCharIdx]: continue
+        #             backtrack(nextChar, nextCharIdx + 1, matched + thisChar, node, False)
+            
+        #     nextChar = matchingWord[nextCharIdx]
+        #     if nextChar in node:
+        #         backtrack(nextChar, nextCharIdx + 1, matched + thisChar, node, True)
+            
+        #     if len(node) == 0:
+        #         parent.pop(thisChar)
+
+        for matchingWord in [beginWord] + wordList:
+            adjacentMap[matchingWord] = []
+            backtrack(0,"", trie, True)
+        
+        beginNode = word2Node[beginWord]
+        q = deque([[beginNode]])
+        allPath = []
+
+        while len(q) > 0:
+            path = q.pop()
+            thisNode = path[-1]
+            thisNode.used = True
+            if len(allPath) == 0 or len(path) <= len(allPath[-1]):
+                if thisNode.word == endWord:
+                    allPath.append([n.word for n in path])
+                else:
+                    for nextNode in adjacentMap[thisNode.word]:
+                        if nextNode.used: continue
+                        q.appendleft(path + [nextNode])
+
+        return allPath
 
 
 
 
 if __name__ == '__main__':
-    q = Q212()
-    print(q.findWords([["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], ["oath","pea","eat","rain"]))
+    q = Q472()
+
 
     # q.put(4,4)
     # print(q.get(1))
