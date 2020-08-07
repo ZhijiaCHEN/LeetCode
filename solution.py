@@ -1356,11 +1356,61 @@ class Q126:
 
         return allPath
 
+# 10. Regular Expression Matching
+class Q10:
+    def isMatch(self, s: str, p: str) -> bool:
+        memo ={}
+        def dp(i: int, j: int) -> bool:
+            if (i, j) not in memo:
+                if j == len(p):
+                    ans = (i == len(s))
+                else:
+                    matchFirst = i < len(s) and p[j] in [s[i], '.']
 
+                    if j + 1 < len(p) and p[j+1] == '*':
+                        ans = dp(i, j + 2) or matchFirst and dp(i + 1, j)
+                    else:
+                        ans = matchFirst and dp(i + 1, j + 1)
+                
+                memo[(i, j)] = ans
+            return memo[(i, j)]
+        return dp(0 , 0)
 
+# 22. Generate Parentheses
+class Q22:
+    def generateParenthesis(self, n: int) -> List[str]:
+        if n == 0:
+            return []
+        ret = []
+        def backtrack(openCnt: int, paren: str, lCnt: int, rCnt: int):
+            if lCnt == 0 and rCnt == 0:
+                ret.append(paren)
+                return
+            if lCnt > 0:
+                backtrack(openCnt + 1, paren + '(', lCnt - 1, rCnt)
+            if rCnt >0 and openCnt > 0:
+                backtrack(openCnt - 1, paren + ')', lCnt, rCnt - 1)
+        backtrack(0, '', n, n)
+        return  ret            
+# 17. Letter Combinations of a Phone Number
+class Q17:
+    def letterCombinations(self, digits: str) -> List[str]:
+        if len(digits) == 0:
+            return []
+        dig2let = {'2': ['a', 'b', 'c'], '3': ['d', 'e', 'f'], '4': ['g', 'h', 'i'], '5': ['j', 'k', 'l'], '6': ['m', 'n', 'o'], '7': ['p', 'q', 'r', 's'], '8': ['t', 'u', 'v'], '9': ['w', 'x', 'y', 'z']}
+        ret = []
+        def backtrack(i: int, s: str):
+            if i == len(digits):
+                ret.append(s)
+            else:
+                for l in dig2let[digits[i]]:
+                    backtrack(i + 1, s+l)
+        backtrack(0, '')
+        return ret
 
 if __name__ == '__main__':
-    q = Q472()
+    q = Q17()
+    print(q.letterCombinations("23"))
 
 
     # q.put(4,4)
