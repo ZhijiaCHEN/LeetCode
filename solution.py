@@ -1392,6 +1392,7 @@ class Q22:
                 backtrack(openCnt - 1, paren + ')', lCnt, rCnt - 1)
         backtrack(0, '', n, n)
         return  ret            
+
 # 17. Letter Combinations of a Phone Number
 class Q17:
     def letterCombinations(self, digits: str) -> List[str]:
@@ -1408,6 +1409,31 @@ class Q17:
         backtrack(0, '')
         return ret
 
+# 136. Single Number
+class Q136:
+    def singleNumber(self, nums: List[int]) -> int:
+        i = 0
+        for x in nums:
+            i ^= x
+        return i
+
+# 137. Single Number II
+class Q137:
+    def singleNumber(self, nums: List[int]) -> int:
+        seenOnce = seenTwice = 0
+        for x in nums:
+            seenOnce = ~seenTwice&(x ^ seenOnce)
+            seenTwice = ~seenOnce&(x ^ seenTwice)
+        return seenOnce
+
+# 268. Missing Number
+class Q268:
+    def missingNumber(self, nums: List[int]) -> int:
+        miss = 0 ^ len(nums)
+        for i, x in enumerate(nums):
+            miss ^= i
+            miss ^= x
+        return miss
 if __name__ == '__main__':
     q = Q17()
     print(q.letterCombinations("23"))
