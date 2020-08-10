@@ -1434,9 +1434,92 @@ class Q268:
             miss ^= i
             miss ^= x
         return miss
+
+# 329. Longest Increasing Path in a Matrix
+class Q329:
+    def longestIncreasingPath(self, matrix: List[List[int]]) -> int:
+        if len(matrix) == 0:
+            return 0
+        R = len(matrix)
+        C = len(matrix[0])
+        memo  = [[0]*len(matrix[0]) for _ in range(R)]
+        def dfs(r, c):
+            nonlocal memo, R, C
+            maxL = 0
+            for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < R and cc >= 0 and cc < C and matrix[rr][cc] > matrix[r][c]:
+                    if memo[rr][cc] == 0:
+                        dfs(rr, cc)
+                    maxL = max(maxL, memo[rr][cc])
+            memo[r][c] = maxL + 1
+        maxL = 0
+        for r in range(R):
+            for c in range(C):
+                if memo[r][c] == 0:
+                    dfs(r, c)
+                maxL = max(maxL, memo[r][c])
+        return maxL
+
+# 207. Course Schedule
+class Solution:
+    def __init__(self) -> None:
+        self.WHITE = 0
+        self.GREY = 1
+        self.BLACK = 2
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        adjacentMap = {i:[] for i in range(numCourses)}
+        colorMap = {i: self.WHITE for i in range(numCourses)}
+        for p in prerequisites:
+            adjacentMap[p[0]].append(p[1])
+        def dfs(c)->bool:
+            nonlocal colorMap
+            colorMap[c] = self.GREY
+            for p in adjacentMap[c]:
+                pColor = colorMap[p]
+                if pColor == self.GREY: return False
+                if pColor == self.BLACK: continue
+                if not dfs(p): return False
+            colorMap[c] = self.BLACK
+            return True
+        for c in range(numCourses):
+            if colorMap[c] == self.WHITE:
+                if not dfs(c): return False
+        return True
+
+# 210. Course Schedule II
+class Q210:
+    def __init__(self) -> None:
+        self.WHITE = 0
+        self.GREY = 1
+        self.BLACK = 2
+    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        adjacentMap = {i:[] for i in range(numCourses)}
+        colorMap = {i: self.WHITE for i in range(numCourses)}
+        for p in prerequisites:
+            adjacentMap[p[0]].append(p[1])
+        order = []
+        def dfs(c)->bool:
+            nonlocal colorMap, order
+            colorMap[c] = self.GREY
+            for p in adjacentMap[c]:
+                pColor = colorMap[p]
+                if pColor == self.GREY: return False
+                if pColor == self.BLACK: continue
+                if not dfs(p): return False
+            colorMap[c] = self.BLACK
+            order.append(c)
+            return True
+        for c in range(numCourses):
+            if colorMap[c] == self.WHITE:
+                if not dfs(c): return []
+        return order
+
+        
 if __name__ == '__main__':
-    q = Q17()
-    print(q.letterCombinations("23"))
+    q = Q210()
+    print(q.findOrder(4, [[1,0],[2,0],[3,1],[3,2]]))
 
 
     # q.put(4,4)
