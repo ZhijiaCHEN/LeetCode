@@ -1516,10 +1516,75 @@ class Q210:
                 if not dfs(c): return []
         return order
 
-        
+# 85. Maximal Rectangle
+class Q85:
+    def maximalRectangle(self, matrix: List[List[str]]) -> int:
+        if len(matrix) == 0:
+            return 0
+        R = len(matrix)
+        C = len(matrix[0])
+        leftMost1 = [0]*C
+        rightMost1 = [C]*C
+        height = [0]*C
+        maxArea = 0
+        for r in range(R):
+            curLeft = 0
+            curRight = C
+            for c in range(C):
+                if matrix[r][c] == '1':
+                    # compute the height of 1
+                    height[c] += 1
+                    # compute left boundary of 1
+                    leftMost1[c] = max(curLeft, leftMost1[c])
+                else:
+                    height[c] = 0
+                    leftMost1[c] = 0
+                    curLeft = c + 1
+                cc = C - c - 1
+                if matrix[r][cc] == '1':
+                    rightMost1[cc] = min(curRight, rightMost1[cc])
+                else:
+                    rightMost1[cc] = C
+                    curRight = cc
+            for c in range(C):
+                maxArea = max(maxArea, height[c]*(rightMost1[c]-leftMost1[c]))
+        return maxArea
+
+# 84. Largest Rectangle in Histogram
+class Q84:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        s = [(-1, -1)]
+        maxArea = 0
+        for i, x in enumerate(heights):
+            if x < s[-1][1]:
+                iH, xH = s[-1]
+                while s[-1][1] > x:
+                    _, xH = s.pop()
+                    maxArea = max(maxArea, xH*(iH-s[-1][0]))
+            s.append((i, x))
+        iH, xH = s[-1]
+        while len(s) > 1:
+            _, xH = s.pop()
+            maxArea = max(maxArea, xH*(iH-s[-1][0]))
+        return maxArea
+
+# 121. Best Time to Buy and Sell Stock
+class Q121:
+    def maxProfit(self, prices: List[int]) -> int:
+        profit = 0
+        buyPrice = prices[0]
+        for x in prices[1:]:
+            if x < buyPrice:
+                buyPrice = x
+            else:
+                profit = max(profit, x-buyPrice)
+        return profit
+
+
+
 if __name__ == '__main__':
-    q = Q210()
-    print(q.findOrder(4, [[1,0],[2,0],[3,1],[3,2]]))
+    q = Q121()
+    print(q.maxProfit([7,1,5,3,6,4]))
 
 
     # q.put(4,4)
