@@ -1580,11 +1580,111 @@ class Q121:
                 profit = max(profit, x-buyPrice)
         return profit
 
+# 139. Word Break
+class Q139:
+    def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+        trie = {}
+        EOW = '$'
+        for word in wordDict:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EOW] = {}
+
+        memo = {}
+        def backtrack(s: str) -> bool:
+            if s in memo:
+                return memo[s]
+            
+            node = trie
+            canBreak = False
+            for i, char in enumerate(s):
+                if char not in node:
+                    canBreak = False
+                    break
+                else:
+                    node = node[char]
+                    if EOW in node and (i+1 == len(s) or backtrack(s[i+1:])):
+                        canBreak = True
+                        break
+            memo[s] = canBreak
+            return canBreak
+        return backtrack(s)
+
+# 322. Coin Change
+class Q322:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        memo = {0:0}
+        coins = sorted(coins)
+        def dp(amount: int) -> int:
+            if amount not in memo:
+                minCoinNum = amount
+                canChange = False
+                rAmount = amount
+                for c in coins:
+                    if c > amount: break
+                    for cNum in range(amount//c+1):
+                        rAmount = amount % c
+                        if rAmount == 0:
+                            minCoinNum = min(minCoinNum, cNum)
+                            canChange = True
+                            continue
+                        if rAmount < coins[0]: 
+                            continue
+                        rNum = dp(rAmount)
+                        if rNum >= 0:
+                            minCoinNum = min(minCoinNum, cNum + rNum)
+                            canChange = True
+                if canChange:
+                    memo[amount] = minCoinNum
+                else:
+                    memo[amount] = -1
+            return memo[amount]
+        return dp(amount)
+    
+    def coinChangeV2(self, coins: List[int], amount: int) -> int:
+        memo = {0:0}
+        coins = sorted(coins)
+        def dp(amount: int) -> int:
+            if amount not in memo:
+                minCoinNum = amount
+                canChange = False
+                for c in coins:
+                    if c > amount: break
+                    cNum = dp(amount - c)
+                    if cNum >= 0:
+                        minCoinNum = min(minCoinNum, 1 + cNum)
+                        canChange = True
+
+                if canChange:
+                    memo[amount] = minCoinNum
+                else:
+                    memo[amount] = -1
+            return memo[amount]
+        return dp(amount)
+
+# 91. Decode Ways
+class Q91:
+    def numDecodings(self, s: str) -> int:
+        for i,x in enumerate(s):
+            if x == '0' and (i == 0 or s[i-1] not in ['1', '2']):
+                return 0
+        memo = {'': 1}
+        def dp(s) ->int:
+            if s not in memo:
+                if s[0] == '0':
+                    return 0
+                if len(s) >= 2 and int(s[:2]) <= 26:
+                    memo[s] = dp(s[1:]) + dp(s[2:])
+                else:
+                    memo[s] = dp(s[1:])
+            return memo[s]
+        return dp(s)
 
 
 if __name__ == '__main__':
-    q = Q121()
-    print(q.maxProfit([7,1,5,3,6,4]))
+    q = Q91()
+    print(q.numDecodings("20"))
 
 
     # q.put(4,4)
