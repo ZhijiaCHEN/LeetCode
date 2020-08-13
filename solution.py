@@ -1680,11 +1680,107 @@ class Q91:
                     memo[s] = dp(s[1:])
             return memo[s]
         return dp(s)
+    
+    def numDecodingsV2(self, s: str) -> int:
+        ret = 1
+        for i, x in list(enumerate(s))[::-1]:
+            if x == '0':
+                if i == 0 or (s[i-1] not in ['1', '2']):
+                    return 0
+            elif i > 0 and int(s[i-1:i+1]) < 26:
+                ret += 1
+        return ret
 
+# 127. Word Ladder
+class Q127:
+    def ladderLength(self, beginWord: str, endWord: str, wordList: List[str]) -> int:
+        from collections import deque
+        trie = {}
+        for word in [beginWord] + wordList:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+        
+        nextWord = {}
+        def backtrack(matchedWord: str, parentNode: dict, wildCard: bool):
+            nonlocal word, q
+            thisChar = matchedWord[-1]
+            if len(matchedWord) == len(word):
+                if not wildCard:
+                    # a neighbor word is matched
+                    nextWord[word].append(matchedWord)
+                    q.appendleft(matchedWord)
+                parentNode.pop(thisChar)
+                return -1
+            else:
+                thisNode = parentNode[thisChar]
+                for nextChar in list(thisNode.keys()):
+                    if word[len(matchedWord)] == nextChar:
+                        backtrack(matchedWord+nextChar, thisNode, wildCard)
+                    elif wildCard:
+                        backtrack(matchedWord+nextChar, thisNode, False)
+                if len(thisNode) == 0:
+                    parentNode.pop(thisChar)
+                return -1
 
+        q = deque([beginWord])
+        pathLen = 0
+        while len(q) > 0:
+            pathLen += 1
+            for _ in range(len(q)):
+                word = q.pop()
+                if word == endWord:
+                    return pathLen
+                nextWord[word] = []
+                for char in list(trie.keys()):
+                    if word[0] == char:
+                        backtrack(char, trie, True)
+                    else:
+                        backtrack(char, trie, False)
+        return 0
+
+# 763. Partition Labels
+class Q763:
+    def partitionLabels(self, S: str) -> List[int]:
+        charOrder = {}
+        firstLastIdx = []
+        for i,x in enumerate(S):
+            if x in charOrder:
+                # set last appearance position of x
+                firstLastIdx[charOrder[x]][1] = i
+            else:
+                charOrder[x] = len(firstLastIdx)
+                firstLastIdx.append([i, i])
+        ret = []
+        overLapInterval = [0, 0]
+        for interval in firstLastIdx:
+            if interval[0] <= overLapInterval[1]:
+                overLapInterval[1] = max(interval[1], overLapInterval[1])
+            else:
+                ret.append(overLapInterval[1] - overLapInterval[0] + 1)
+                overLapInterval = interval
+        ret.append(overLapInterval[1] - overLapInterval[0] + 1)
+        return ret
+
+# 56. Merge Intervals
+class Q56:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        if len(intervals) == 0:
+            return []
+        intervals.sort()
+        ret = []
+        overLapInterval = intervals[0]
+        for interval in intervals[1:]:
+            if interval[0] <= overLapInterval[1]:
+                overLapInterval[1] = max(interval[1], overLapInterval[1])
+            else:
+                ret.append(overLapInterval)
+                overLapInterval = interval
+        ret.append(overLapInterval)
+        return ret
 if __name__ == '__main__':
-    q = Q91()
-    print(q.numDecodings("20"))
+    q = Q56()
+    print(q.merge([[1,4]]))
 
 
     # q.put(4,4)
