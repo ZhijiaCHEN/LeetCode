@@ -1778,10 +1778,180 @@ class Q56:
                 overLapInterval = interval
         ret.append(overLapInterval)
         return ret
-if __name__ == '__main__':
-    q = Q56()
-    print(q.merge([[1,4]]))
 
+# 588. Design In-Memory File System
+class FileSystem:
+
+    def __init__(self):
+        self.file = {'':{}}
+
+    def parse_path(self, path):
+        path = path.split('/')
+        if len(path[-1]) == 0:
+            path = path[:-1]
+        return path
+
+    def ls(self, path: str) -> List[str]:
+        path = self.parse_path(path)
+        ret = []
+        node = self.file
+        for p in path:
+            node = node[p]
+        if type(node) == str:
+            ret.append(p)
+        else:
+            for f in node:
+                ret.append(f)
+        ret.sort()
+        return ret
+
+    def mkdir(self, path: str) -> None:
+        path = self.parse_path(path)
+        node = self.file
+        for p in path:
+            node = node.setdefault(p, {})
+        
+
+    def addContentToFile(self, filePath: str, content: str) -> None:
+        path = self.parse_path(filePath)
+        if len(path[-1]) == 0:
+            path = path[:-1]
+        node = self.file
+        for p in path[:-1]:
+            node = node.setdefault(p, {})
+        if path[-1] in node:
+            node[path[-1]] += content
+        else:
+            node[path[-1]] = content
+
+    def readContentFromFile(self, filePath: str) -> str:
+        path = self.parse_path(filePath)
+        node = self.file
+        for p in path:
+            node = node[p]
+        return node
+
+# 224. Basic Calculator
+class Q244:
+    def eval(self, l: list) -> int:
+        ret = 0
+        neg = False
+        ans = l[0]
+        i = 1
+        while i < len(l) - 1:
+            if l[i] in ('+', '-'):
+                if neg:
+                    ret -= ans
+                else:
+                    ret += ans
+                if l[i] == '-':
+                    neg = True
+                else:
+                    neg = False
+                ans = l[i+1]
+            else:
+                if l[i] == '*':
+                    ans = ans * l[i+1]
+                else:
+                    ans = ans // l[i+1]
+            i += 2
+        if neg:
+            ret -= ans
+        else:
+            ret += ans
+        return ret
+
+
+    def preporcess(self, s: str) -> List:
+        s = s.replace(' ', '')
+        ret = []
+        numStr = ''
+        for x in s:
+            if x in ['+', '-', '*', '/', '(', ')']:
+                if len(numStr) > 0:
+                    ret.append(int(numStr))
+                    numStr = ''
+                ret.append(x)
+            else:
+                numStr += x
+        if len(numStr) > 0:
+            ret.append(int(numStr))
+        return ret
+
+    def calculate(self, s: str) -> int:
+        s = self.preporcess(s)
+
+        parenCnt = 0
+        segS = [[]]
+        for i, x in enumerate(s):
+            if x == '(':
+                parenCnt += 1
+                segS.append([])
+                continue
+            if x == ')':
+                segEval = self.eval(segS.pop())
+                segS[-1].append(segEval)
+                continue
+            segS[-1].append(x)
+        return self.eval(segS[0])
+
+# 772. Basic Calculator III
+Q772 = Q244
+
+# 227. Basic Calculator II
+class Solution:
+    def eval(self, l: list) -> int:
+        ret = 0
+        neg = False
+        ans = l[0]
+        i = 1
+        while i < len(l) - 1:
+            if l[i] in ('+', '-'):
+                if neg:
+                    ret -= ans
+                else:
+                    ret += ans
+                if l[i] == '-':
+                    neg = True
+                else:
+                    neg = False
+                ans = l[i+1]
+            else:
+                if l[i] == '*':
+                    ans = ans * l[i+1]
+                else:
+                    ans = ans // l[i+1]
+            i += 2
+        if neg:
+            ret -= ans
+        else:
+            ret += ans
+        return ret
+
+
+    def preporcess(self, s: str) -> List:
+        s = s.replace(' ', '')
+        ret = []
+        numStr = ''
+        for x in s:
+            if x in ['+', '-', '*', '/']:
+                if len(numStr) > 0:
+                    ret.append(int(numStr))
+                    numStr = ''
+                ret.append(x)
+            else:
+                numStr += x
+        if len(numStr) > 0:
+            ret.append(int(numStr))
+        return ret
+
+    def calculate(self, s: str) -> int:
+        return self.eval(self.preporcess(s))
+
+if __name__ == '__main__':
+    q = Q244() 
+    print(q.calculate("2-(5-6)"))
+ 
 
     # q.put(4,4)
     # print(q.get(1))
