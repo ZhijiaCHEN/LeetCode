@@ -1,6 +1,6 @@
 
-from collections import deque
-from heapq import heappushpop
+from collections import deque, namedtuple
+from heapq import heappushpop, nsmallest
 import heapq
 from typing import ChainMap, Collection, List, Union, Tuple
 from data_structure import ListNode, TreeNode
@@ -1899,7 +1899,7 @@ class Q244:
 Q772 = Q244
 
 # 227. Basic Calculator II
-class Solution:
+class Q227:
     def eval(self, l: list) -> int:
         ret = 0
         neg = False
@@ -1948,9 +1948,163 @@ class Solution:
     def calculate(self, s: str) -> int:
         return self.eval(self.preporcess(s))
 
+# 238. Product of Array Except Self
+class Q238:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        productL = [1]*len(nums)
+        productL[1] = nums[0]
+        for i in range(2, len(nums)):
+            productL[i] = nums[i-1]*productL[i-1]
+        productR = 1
+        for i in range(len(nums)-1, -1, -1):
+            productL[i] = productR*productL[i]
+            productR = productR*nums[i]
+        return productL
+
+# 348. Design Tic-Tac-Toe
+class TicTacToe:
+    def __init__(self, n: int):
+        """
+        Initialize your data structure here.
+        """
+        self.rowCnt = {1:{i:0 for i in range(n)}, 2:{i:0 for i in range(n)}}
+        self.colCnt = {1:{i:0 for i in range(n)}, 2:{i:0 for i in range(n)}}
+        self.diaCnt = {1:0, 2:0}
+        self.invDiaCnt = {1:0, 2:0}
+        self.n = n
+
+    def move(self, row: int, col: int, player: int) -> int:
+        """
+        Player {player} makes a move at ({row}, {col}).
+        @param row The row of the board.
+        @param col The column of the board.
+        @param player The player, can be either 1 or 2.
+        @return The current winning condition, can be either:
+                0: No one wins.
+                1: Player 1 wins.
+                2: Player 2 wins.
+        """
+        self.rowCnt[player][row] += 1
+        self.colCnt[player][col] += 1
+        if row == col:
+            self.diaCnt[player] += 1
+        if row + col == self.n - 1:
+            self.invDiaCnt[player] += 1
+
+        if (self.rowCnt[player][row] == self.n) or (self.colCnt[player][col] == self.n) or (self.diaCnt[player] == self.n) or (self.invDiaCnt[player] == self.n):
+            return player
+        else:
+            return 0
+
+# 301. Remove Invalid Parentheses
+class Q301:
+    # def removeInvalidParentheses(self, s: str) -> List[str]:
+    #     pCnt = 0
+    #     sSegIdx = [[0, 0, pCnt]]
+    #     rParenCnt = [0]*len(s)
+    #     for i in range(0, len(s)):
+    #         if s[i] == '(':
+    #             if pCnt > 0:
+    #                 # start a new validation segment
+                    
+    #                 sSegIdx[-1][1] = i
+    #                 sSegIdx.append([i, i, -1])
+    #                 pCnt = -1
+    #                 rParenCnt = [i] = 0
+
+
+    #             else:
+    #                 pCnt -= 1
+    #         elif s[i] == ')':
+    #             pCnt += 1
+    #     sSegIdx[-1][1] = len(s)
+    #     sSegIdx[-1][2] = pCnt
+
+    #     def backtrack(sIdx: int, eIdx:int, rmPCnt:int, fixed: set):
+    #         if rmPCnt == (eIdx - sIdx):
+    #             fixed.add()
+
+    #     fixedSeg = []
+    #     for si in sSegIdx[:-1]:
+        
+    def removeInvalidParentheses(self, s: str) -> List[str]:
+        ret = set()
+        minRm = len(s)
+        def backtrack(prevS, i, pCnt, rmCnt):
+            nonlocal s, minRm
+            if i == len(s):
+                if pCnt == 0:
+                    if rmCnt <= minRm:
+                        ret.add(prevS)
+                        minRm = rmCnt
+            else:
+                if s[i] == '(':
+                    if rmCnt < minRm:
+                        backtrack(prevS, i+1, pCnt, rmCnt + 1) # remove
+                    else:
+                        # pruning, expression is impossible to be valid if no more remove can be done
+                        if pCnt - 1 + (len(s)-i) < 0:
+                            return
+                    backtrack(prevS+'(', i+1, pCnt-1, rmCnt) # not remove
+                elif s[i] == ')':
+                    if rmCnt < minRm:
+                        backtrack(prevS, i+1, pCnt, rmCnt + 1) # remove
+                    else:
+                        if pCnt + 1 > 0:
+                            return
+                    if pCnt < 0:
+                        # we can keep ) only if we have unmatched (
+                        backtrack(prevS+')', i+1, pCnt+1, rmCnt)
+                else:
+                    # keep other characters
+                    backtrack(prevS+s[i], i+1, pCnt, rmCnt)
+        backtrack('', 0, 0, 0)
+        return [x for x in ret if len(x) == len(s) - minRm]
+
+# 31. Next Permutation
+class Q31:
+    def nextPermutation(self, nums: List[int]) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        for i in range(len(nums) - 2, -1, -1):
+            if nums[i] < nums[i+1]:
+                for j in range(len(nums) - 1, i, -1):
+                    if nums[i] < nums[j]:
+                        nums[i], nums[j] = nums[j], nums[i]
+                        break
+                nums[i+1:] = sorted(nums[i+1:])
+                return
+        nums[:] = nums[-1::-1]
+
+# 560. Subarray Sum Equals K
+class Q560:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        cnt = 0
+        sumDict = {0:1}
+        csum = 0
+        for x in nums:
+            csum += x
+            cnt += sumDict.get(csum - k, 0)
+            sumDict[csum] = sumDict.get(csum, 0) + 1
+        return cnt
+
+# 215. Kth Largest Element in an Array
+class Q215:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        from heapq import heappush, heappop, heappushpop, heapify
+        kLargest = nums[:k]
+        heapify(kLargest)
+        for x in nums[k:]:
+            if x > kLargest[0]:
+                heappushpop(kLargest, x)
+        return kLargest[0]
+
+
+
 if __name__ == '__main__':
-    q = Q244() 
-    print(q.calculate("2-(5-6)"))
+    q = Q560() 
+    print(q.subarraySum([-92,-63,75,-86,-58,22,31,-16,-66,-67,420], 100))
  
 
     # q.put(4,4)
