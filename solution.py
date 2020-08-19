@@ -2100,11 +2100,106 @@ class Q215:
                 heappushpop(kLargest, x)
         return kLargest[0]
 
+# 528. Random Pick with Weight
+class Q528:
+    from random import randint
+    from bisect import bisect_left
+    def __init__(self, w: List[int]):
+         
+        self.culmW = []
+        s = 0
+        for x in w:
+            s += x
+            self.culmW.append(s)
+
+    def pickIndex(self) -> int:
+        w = randint(1, self.culmW[-1])
+        i = bisect_left(self.culmW, w)
+        return i
+
+# 986. Interval List Intersections
+class Q986:
+    def intervalIntersection(self, A: List[List[int]], B: List[List[int]]) -> List[List[int]]:
+        ret = []
+        aIdx = 0
+        bIdx = 0
+        while aIdx < len(A) and bIdx < len(B):
+            if A[aIdx][0] <= B[bIdx][0] <= A[aIdx][1]:
+                ret.append([B[bIdx][0], min(A[aIdx][1], B[bIdx][1])])
+            elif B[bIdx][0] <= A[aIdx][0] <= B[bIdx][1]:
+                ret.append([A[aIdx][0], min(B[bIdx][1], A[aIdx][1])])
+            
+            if A[aIdx][1] < B[bIdx][1]:
+                aIdx += 1
+            elif A[aIdx][1] > B[bIdx][1]:
+                bIdx += 1
+            else:
+                aIdx += 1
+                bIdx += 1
+        return ret
+# 953. Verifying an Alien Dictionary
+class Q953:
+    def isAlienSorted(self, words: List[str], order: str) -> bool:
+        order = {x:i for i, x in enumerate(order)}
+        for w1, w2 in zip(words[:-1], words[1:]):
+            for i, (char1, char2) in enumerate(zip(w1, w2)):
+                if char1 != char2:
+                    if order[char1] > order[char2]:
+                        return False
+                    else:
+                        break
+                else:
+                    if i == len(w2) - 1 < len(w1) -1:
+                        return False
+        return True
+
+# 173. Binary Search Tree Iterator
+class BSTIterator:
+    def __init__(self, root: TreeNode):
+        self.path = []
+        self.finished = []
+        self.pNext = root
+        while self.pNext and self.pNext.left:
+            self.path.append(self.pNext)
+            self.finished.append(False)
+            self.pNext = self.pNext.left
+
+    def go_next(self):
+        if self.pNext.right:
+            self.path.append(self.pNext)
+            self.finished.append(True)
+            self.pNext = self.pNext.right
+            while self.pNext and self.pNext.left:
+                self.path.append(self.pNext)
+                self.finished.append(False)
+                self.pNext = self.pNext.left
+        else:
+            while len(self.finished) > 0 and self.finished[-1]:
+                self.path.pop()
+                self.finished.pop()
+            if len(self.path) > 0:
+                self.pNext = self.path.pop()
+                self.finished.pop()
+            else:
+                self.pNext = None
+
+    def next(self) -> int:
+        """
+        @return the next smallest number
+        """
+        ret = self.pNext.val
+        self.go_next()
+        return ret
 
 
+    def hasNext(self) -> bool:
+        """
+        @return whether we have a next smallest number
+        """
+        return self.pNext is not None
 if __name__ == '__main__':
-    q = Q560() 
-    print(q.subarraySum([-92,-63,75,-86,-58,22,31,-16,-66,-67,420], 100))
+    q = Q953() 
+    print(q.isAlienSorted(["hello","leetcode"], "hlabcdefgijkmnopqrstuvwxyz"))
  
 
     # q.put(4,4)
