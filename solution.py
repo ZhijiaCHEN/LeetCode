@@ -2137,6 +2137,7 @@ class Q986:
                 aIdx += 1
                 bIdx += 1
         return ret
+
 # 953. Verifying an Alien Dictionary
 class Q953:
     def isAlienSorted(self, words: List[str], order: str) -> bool:
@@ -2197,9 +2198,83 @@ class BSTIterator:
         @return whether we have a next smallest number
         """
         return self.pNext is not None
+
+# 438. Find All Anagrams in a String
+class Q438:
+    def findAnagrams(self, s: str, p: str) -> List[int]:
+        ret = []
+        pCharCnt = {}
+        for pi in p:
+            pCharCnt[pi] = pCharCnt.get(pi, 0) + 1
+        
+        winCharCnt = {pi: 0 for pi in p}
+        cnt = 0
+        idx = 0
+        for i, si in enumerate(s):
+            if si not in pCharCnt:
+                cnt = 0
+                idx = i+1
+                winCharCnt = {pi: 0 for pi in p}
+                continue
+
+            winCharCnt[si] = winCharCnt[si] + 1
+
+            while winCharCnt[si] > pCharCnt[si]:
+                winCharCnt[s[idx]] -= 1
+                cnt -= 1
+                idx += 1
+
+            cnt += 1
+            if cnt == len(p):
+                ret.append(idx)
+                winCharCnt[s[idx]] -= 1
+                cnt -= 1
+                idx += 1
+        return ret
+
+# 636. Exclusive Time of Functions
+class Q636:
+    def exclusiveTime(self, n: int, logs: List[str]) -> List[int]:
+        ret = [0]*n
+        funcStack = []
+        startTime = []
+        waitTime = []
+        for l in logs:
+            l = l.split(':')
+            fid = int(l[0])
+            t = int(l[2])
+            if l[1] == 'start':
+                funcStack.append(fid)
+                startTime.append(t)
+                waitTime.append(0)
+            else:
+                tSpan = t - startTime.pop() + 1
+                assert fid == funcStack.pop()
+                ret[fid] += (tSpan - waitTime.pop())
+                waitTime[-1] += tSpan
+        return ret
+
+# 1249. Minimum Remove to Make Valid Parentheses
+class Q1249:
+    def minRemoveToMakeValid(self, s: str) -> str:
+        ret = ''
+        openCnt = 0
+        for si in s:
+            if si == '(':
+                openCnt += 1
+                ret += '('
+            elif si == ')':
+                if openCnt > 0:
+                    ret += ')'
+                    openCnt -= 1
+            else:
+                ret += si
+        if openCnt > 0:
+            ret = ret[::-1].replace('(', '', openCnt)[::-1]
+        return ret
 if __name__ == '__main__':
-    q = Q953() 
-    print(q.isAlienSorted(["hello","leetcode"], "hlabcdefgijkmnopqrstuvwxyz"))
+    q = Q438() 
+    print(q.findAnagrams("cbaebabbacd", "abbc"))
  
 
     # q.put(4,4)
