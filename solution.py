@@ -2272,9 +2272,149 @@ class Q1249:
         if openCnt > 0:
             ret = ret[::-1].replace('(', '', openCnt)[::-1]
         return ret
+
+# 34. Find First and Last Position of Element in Sorted Array
+class Q34:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        minIdx = 0
+        maxIdx = len(nums) - 1
+        lIdx = -1
+        while maxIdx > minIdx:
+            midIdx = int((maxIdx+minIdx+1)/2)
+            if (nums[midIdx] > target) or (midIdx > 0 and nums[midIdx - 1] == target):
+                if maxIdx == midIdx:
+                    if nums[minIdx] == target:
+                        lIdx = minIdx
+                    break
+                else:
+                    maxIdx = midIdx
+            elif nums[midIdx] < target:
+                if minIdx == midIdx:
+                    if nums[maxIdx] == target:
+                        lIdx = maxIdx
+                    break
+                else:
+                    minIdx = midIdx
+            else:
+                lIdx = midIdx
+                break
+
+        if len(nums) == 1:
+            if nums[0] == target:
+                return [0, 0]
+
+        if lIdx == -1:
+            return [-1, -1]
+
+        minIdx = lIdx
+        maxIdx = len(nums) - 1
+        rIdx = maxIdx
+        while maxIdx > minIdx:
+            midIdx = int((maxIdx+minIdx+1)/2)
+            if (nums[midIdx] > target):
+                if maxIdx == midIdx:
+                    if nums[minIdx] == target:
+                        rIdx = minIdx
+                    break
+                else:
+                    maxIdx = midIdx
+            elif (midIdx < len(nums) - 1) and (nums[midIdx+1] == target):
+                if minIdx == midIdx:
+                    if nums[maxIdx] == target:
+                        rIdx = maxIdx
+                    break
+                else:
+                    minIdx = midIdx
+            else:
+                rIdx = midIdx
+                break
+        return [lIdx, rIdx]
+
+# 158. Read N Characters Given Read4 II - Call multiple times
+# The read4 API is already defined for you.
+inputFile = "123456789123456789123456789"
+readIdx = 0
+def read4(buf4: List[str]) -> int:
+    global readIdx, inputFile
+    if readIdx >= len(inputFile):
+        return 0
+
+    if readIdx + 4 <= len(inputFile):
+        buf4[:] = inputFile[readIdx:readIdx+4]
+        readIdx += 4
+        return 4
+    else:
+        readCnt = len(inputFile)-readIdx
+        buf4[:readCnt] = inputFile[readIdx:]
+        readIdx += readCnt
+        return readCnt
+
+
+class Q158:
+    def __init__(self) -> None:
+        self.buff4 = ['0']*4
+        self.preread()
+
+    def preread(self):
+        self.remainCnt = read4(self.buff4)
+        self.buffIdx = 0
+
+    def read(self, buf: List[str], n: int) -> int:
+        buf[:] = ['']*len(buf)
+
+        readCnt = 0
+        while n > 0:
+            if self.remainCnt <= n:
+                buf[readCnt: readCnt+self.remainCnt] = self.buff4[self.buffIdx:self.buffIdx+self.remainCnt]
+                readCnt += self.remainCnt
+                n -= self.remainCnt
+
+                self.preread()
+                if self.remainCnt == 0:
+                    break
+            else:
+                buf[readCnt: readCnt+n] = self.buff4[self.buffIdx:self.buffIdx+n]
+                readCnt += n
+                self.remainCnt -= n
+                self.buffIdx += n
+                n = 0
+        return readCnt
+
+# 415. Add Strings
+class Q415:
+    def addStrings(self, num1: str, num2: str) -> str:
+        from itertools import zip_longest
+        nums = [0, 0]
+        digit2Str = {i:str(i) for i in range(10)}
+        str2Digit = {str(i):i for i in range(10)}
+        ret = ''
+        carrry = False
+        for d1, d2 in zip_longest(num1[::-1], num2[::-1]):
+            if d1 and d2:
+                d1 = str2Digit[d1]
+                d2 = str2Digit[d2]
+                s = d1 + d2
+            else:
+                if d1:
+                    s = str2Digit[d1]
+                else:
+                    s = str2Digit[d2]
+            if carrry:
+                s += 1
+                carrry = False
+            if s >= 10:
+                s -= 10
+                carrry = True
+            ret = digit2Str[s]+ret
+        if carrry:
+            ret = '1'+ret
+        return ret
+
+
+
 if __name__ == '__main__':
-    q = Q438() 
-    print(q.findAnagrams("cbaebabbacd", "abbc"))
+    q = Q415()
+    print(q.addStrings('1', '3'))
  
 
     # q.put(4,4)
