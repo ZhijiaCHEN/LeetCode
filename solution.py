@@ -2410,11 +2410,74 @@ class Q415:
             ret = '1'+ret
         return ret
 
+# 133. Clone Graph
+# Definition for a Node.
+class Node:
+    def __init__(self, val = 0, neighbors = None):
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
 
+
+class Q133:
+    def cloneGraph(self, node: 'Node') -> 'Node':
+        if node is None:
+            return None
+        nodeDict = {}
+        dstNode = nodeDict.setdefault(node.val, Node(node.val))
+        nodes = set()
+        def dfs(srcNode: 'Node', dstNode: 'Node'):
+            nodes.add(dstNode.val)
+            for srcChild in srcNode.neighbors:
+                dstChild = nodeDict.setdefault(srcChild.val, Node(srcChild.val))
+                dstNode.neighbors.append(dstChild)
+                if dstChild.val not in nodes:
+                    dfs(srcChild, dstChild)
+        dfs(node, dstNode)
+        return dstNode
+        
+# 50. Pow(x, n)
+class Q50:
+    def myPow(self, x: float, n: int) -> float:
+        if n == 0:
+            return 1.0
+        power = 1
+        ret = x
+        powTable = {1:x}
+        nextPow = 1
+        while power < abs(n):
+            ret *= powTable[nextPow]
+            power += nextPow
+            powTable[power] = ret
+            nextPow *= 2
+            while nextPow + power > abs(n):
+                nextPow /= 2
+        if n > 0:
+            return ret
+        else:
+            return 1/ret
+
+# 340. Longest Substring with At Most K Distinct Characters
+class Q340:
+    def lengthOfLongestSubstringKDistinct(self, s: str, k: int) -> int:
+        if k == 0:
+            return 0
+        maxL = 0
+        lIdx = 0
+        charSet = set()
+        for rIdx in range(0, len(s)):
+            charSet.add(s[rIdx])
+            if len(charSet) > k:
+                while s[lIdx] == s[rIdx]:
+                    lIdx += 1
+                charSet.remove(s[lIdx])
+                lIdx += 1
+            else:
+                maxL = max(maxL, len(charSet))
+        return maxL
 
 if __name__ == '__main__':
-    q = Q415()
-    print(q.addStrings('1', '3'))
+    q = Q340()
+    print(q.lengthOfLongestSubstringKDistinct('eceba', 2))
  
 
     # q.put(4,4)
