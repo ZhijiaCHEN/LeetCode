@@ -865,8 +865,95 @@ class Solution(object):
         dfs(0, 0)  # since this is a connected graph, we don't have to loop over all nodes.
         return list(connections)
 
+# 88. Merge Sorted Array
+class Q88: 
+    def merge(self, nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+        """
+        Do not return anything, modify nums1 in-place instead.
+        """
+        if m == 0:
+            p1 = -1
+        else:
+            p1 = 0
+        if n == 0:
+            p2 = -1
+        else:
+            p2 = 0
+        cnt = 0
+        while 0 <= p2 < n:
+            if p1 >= 0 and cnt < m:
+                if nums1[p1] >= nums2[p2]:
+                    nums1.insert(p1, nums2[p2])
+                    p2 += 1
+                else:
+                    cnt += 1
+                p1 += 1
+            else:
+                if p1 < 0:
+                    nums1[:n] = nums2
+                else:
+                    nums1[p1: p1+(n-p2)] = nums2[p2:n]
+                break
+        del nums1[m+n:]
+
+# 311. Sparse Matrix Multiplication
+class Q311:
+    def multiply(self, A: List[List[int]], B: List[List[int]]) -> List[List[int]]:
+        rowSkip = set()
+        colSkip = set()
+        for r, row in enumerate(A):
+            if sum([abs(x) for x in row]) == 0:
+                rowSkip.add(r)
+        BTrans = []
+        for c in range(len(B[0])):
+            col = [row[c] for row in B]
+            if sum([abs(x) for x in col]) == 0:
+                colSkip.add(c)
+            BTrans.append(col)
+
+        AB = [[0]*len(B[0]) for _ in range(len(A))]
+        for r in range(len(A)):
+            if r in rowSkip:
+                continue
+            for c in range(len(B[0])):
+                if c in colSkip:
+                    continue
+                AB[r][c] = sum([x*y for x, y in zip(A[r], BTrans[c])])
+        return AB
+
+# 721. Accounts Merge
+class Q721:
+    def accountsMerge(self, accounts: List[List[str]]) -> List[List[str]]:
+        acntIdx = set()
+        emailDict = {}
+        for i, acnt in enumerate(accounts):
+            newEmail = [email for email in acnt[1:] if email not in emailDict]
+            if len(newEmail) == len(acnt) - 1:
+                for email in newEmail:
+                    emailDict[email] = i
+                acntIdx.add(i)
+            else:
+                oldEmail = [email for email in acnt[1:] if email in emailDict]
+                oldAcntIdxAll = set([emailDict[email] for email in oldEmail])
+                oldAcntIdx = oldAcntIdxAll.pop()
+                while len(oldAcntIdxAll) > 0:
+                    oldAcntIdxRm = oldAcntIdxAll.pop()
+                    for email in accounts[oldAcntIdxRm][1:]:
+                        accounts[oldAcntIdx].append(email)
+                        emailDict[email] = oldAcntIdx
+                    acntIdx.remove(oldAcntIdxRm)
+                for email in newEmail:
+                    emailDict[email] = oldAcntIdx
+                    accounts[oldAcntIdx].append(email)
+        ret = []
+        for idx in acntIdx:
+            acnt = accounts[idx]
+            acnt[1:] = sorted(list(set(acnt[1:])))
+            ret.append(acnt)
+        return ret
+
 if __name__ == '__main__':
-    q = Solution()
+    q = Q1192()
     print(q.criticalConnections(5, [[1,0],[2,0],[3,2],[4,2],[4,3],[3,0],[4,0]]))
     # q.put(4,4)
     # print(q.get(1))
