@@ -2562,6 +2562,62 @@ class Q721:
             ret.append(acnt)
         return ret
 
+# 523. Continuous Subarray Sum
+class Q523:
+    def checkSubarraySum(self, nums: List[int], k: int) -> bool:
+        rem2Idx = {0: -1}
+        cumSum = 0
+        for i, x in enumerate(nums):
+            cumSum += x
+            if k == 0:
+                rem = cumSum
+            else:
+                rem = cumSum % k
+            if (rem in rem2Idx):
+                if (i - rem2Idx[rem] > 1):
+                    return True
+            else:
+                rem2Idx[rem] = i
+
+# 278. First Bad Version
+# The isBadVersion API is already defined for you.
+# @param version, an integer
+# @return an integer
+# def isBadVersion(version):
+
+class Solution:
+    def firstBadVersion(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        minIdx = 1
+        maxIdx = n
+        while minIdx < maxIdx:
+            midIdx = int((minIdx + maxIdx + 1)/2)
+            if not isBadVersion(midIdx):
+                minIdx = midIdx
+            else:
+                if (midIdx == 1) or (not isBadVersion(midIdx-1)):
+                    return midIdx
+                if maxIdx == midIdx:
+                    return minIdx
+                maxIdx = midIdx
+        return minIdx
+
+# 1428. Leftmost Column with at Least a One
+class Q1428:
+    def leftMostColumnWithOne(self, binaryMatrix: 'BinaryMatrix') -> int:
+        [M, N] = BinaryMatrix.dimensions()
+        cIdxMin = N
+        for r in range(0, M):
+            for c in range(cIdxMin - 1, -1, -1):
+                if binaryMatrix.get(r, c) == 0:
+                    break
+                else:
+                    cIdxMin = c
+        return cIdxMin
+
 if __name__ == '__main__':
     q = Q340()
     print(q.lengthOfLongestSubstringKDistinct('eceba', 2))
