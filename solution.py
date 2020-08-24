@@ -1,7 +1,8 @@
 
-from heapq import heappushpop
+from collections import deque, namedtuple
+from heapq import heappushpop, nsmallest
 import heapq
-from typing import ChainMap, List, Union, Tuple
+from typing import ChainMap, Collection, List, Union, Tuple
 from data_structure import ListNode, TreeNode
 from utility import singly_list, binary_tree
 
@@ -807,63 +808,1672 @@ class Codec:
 # 1192. Critical Connections in a Network
 class Q1192:
     def criticalConnections(self, n: int, connections: List[List[int]]) -> List[List[int]]:
-        adjacentMap = {i: set() for i in range(n)}
+        adjacentMap = {i: [] for i in range(n)}
         for c in connections:
-            adjacentMap[c[0]].add(c[1])
-            adjacentMap[c[1]].add(c[0])
-        #minRank = {x: -1 for x in adjacentMap}
-        pathRank = {x: -1 for x in adjacentMap}
-
+            adjacentMap[c[0]].append(c[1])
+            adjacentMap[c[1]].append(c[0])
+        minRank = {x: -1 for x in adjacentMap}
         criCon = []
-        def dfs(s: int, rank: int) -> int:
-            pathRank[s] = rank
-            minRank = n
+        def dfs(s: int, rank: int, p: int) -> int:
+            #global minRank
+            minRank[s] = rank
             for c in adjacentMap[s]:
-                if pathRank[c] >= 0:
-                    cRank = pathRank[c]
+                if c == p: continue
+                if minRank[c] >= 0:
+                    cRank = minRank[c]
                 else:
-                    adjacentMap[c].remove(s)
-                    cRank = dfs(c, rank + 1)
-                if cRank > pathRank[s]:
-                    criCon.append([s, c])
-                minRank = min(minRank, cRank)
+                    cRank = dfs(c, rank + 1, s)
+                minRank[s] = min(minRank[s], cRank)
+            if minRank[s] >= rank and p >= 0:
+                criCon.append([p, s])
 
-            return minRank
-        dfs(0, 0)
+            return minRank[s]
+        dfs(0, 0, -1)
         return criCon
 
-import collections
-class Solution(object):
-    def criticalConnections(self, n, connections):
-        def makeGraph(connections):
-            graph = collections.defaultdict(list)
-            for conn in connections:
-                graph[conn[0]].append(conn[1])
-                graph[conn[1]].append(conn[0])
-            return graph
+# 200. Number of Islands
+class Q200:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        if len(grid) == 0 or len(grid[0]) == 0:
+            return 0
+        rNum = len(grid)
+        cNum = len(grid[0])
+        def dfs(r: int, c: int):
+            if r >= 0 and r < rNum and c >= 0 and c < cNum:
+                if grid[r][c] == "1":
+                    grid[r][c] = 0
+                    dfs(r + 1, c)
+                    dfs(r, c + 1)
+                    dfs(r - 1, c)
+                    dfs(r, c - 1)
+        ret = 0
+        for r in range(rNum):
+            for c in range(cNum):
+                if grid[r][c] == "1":
+                    ret += 1
+                    dfs(r, c)
+        
+        return ret
 
-        graph = makeGraph(connections)
-        connections = set(map(tuple, (map(sorted, connections))))
-        rank = [-2] * n
+# 994. Rotting Oranges
+class Q994:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        from collections import deque
+        if len(grid) == 0 or len(grid[0]) == 0:
+            return 0
+        rNum = len(grid)
+        cNum = len(grid[0])
+        freshCnt = 0
+        rotten = deque()
+        for r in range(rNum):
+            for c in range(cNum):
+                if grid[r][c] == 1:
+                    freshCnt += 1
+                elif grid[r][c] == 2:
+                    rotten.append((r, c))
+        rottenTime = 0
+        
+        while rotten and freshCnt > 0:
+            rottenTime += 1
+            for _ in range(len(rotten)):
+                r, c = rotten.popleft()
+                for dr, dc in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
+                    rr = r + dr
+                    cc = c + dc
+                    if rr < 0 or rr == rNum or cc < 0 or cc == cNum: continue
+                    if grid[rr][cc] == 1:
+                        grid[rr][cc] = 2
+                        freshCnt -= 1
+                        rotten.append((rr, cc))
+        if freshCnt > 0:
+            return -1
+        else:
+            return rottenTime
 
-        def dfs(node, depth):
-            if rank[node] >= 0:
-                # visiting (0<=rank<n), or visited (rank=n)
-                return rank[node]
-            rank[node] = depth
-            min_back_depth = n
-            for neighbor in graph[node]:
-                if rank[neighbor] == depth - 1:
-                    continue  # don't immmediately go back to parent. that's why i didn't choose -1 as the special value, in case depth==0.
-                back_depth = dfs(neighbor, depth + 1)
-                if back_depth <= depth:
-                    connections.discard(tuple(sorted((node, neighbor))))
-                min_back_depth = min(min_back_depth, back_depth)
-            #rank[node] = n  # this line is not necessary. see the "brain teaser" section below
-            return min_back_depth
+# 773. Sliding Puzzle
+class Q773:
+    class MyNode:
+        def __init__(self, board: List[List[int]]) -> None:
+            self.key = tuple(board[0] + board[1])
+            self.child = []
+
+    def generate_graph(self, root):
+        from collections import deque
+        q = deque([root])
+        existingState = set([root.key])
+        while len(q) > 0:
+            state = q.popleft()
+            zeroIdx = state.key.index(0)
+            if zeroIdx > 2:
+                r = 1
+            else:
+                r = 0
+            c = zeroIdx % 3
+            for dr, dc in [(0, 1), (1, 0), (0, -1), (-1 ,0)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < 2 and cc >= 0 and cc < 3:
+                    nextState = [list(state.key[:3]), list(state.key[3:])]
+                    nextState[r][c] = nextState[rr][cc]
+                    nextState[rr][cc] = 0
+                    nextState = self.MyNode(nextState)
+                    if nextState.key in existingState: continue
+                    existingState.add(nextState.key)
+                    state.child.append(nextState)
+                    q.append(nextState)
+
+    def slidingPuzzle(self, board: List[List[int]]) -> int:
+        from collections import deque
+        target = (1,2,3,4,5,0)
+        root = self.MyNode(board)
+        if root.key == target: return 0
+        self.generate_graph(root)
+
+        q = deque([root])
+        dist = -1
+        while len(q) > 0:
+            dist += 1
+            for _ in range(len(q)):
+                state = q.popleft()
+                if state.key == target: return dist
+                for child in state.child:
+                    q.append(child)
+        return -1
+
+# 4. Median of Two Sorted Arrays
+class Q4:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+        from math import ceil, floor
+        if len(nums2) < len(nums1):
+            tmp = nums1
+            nums1 = nums2
+            nums2 = tmp
+        l1 = len(nums1)
+        l2 = len(nums2)
+        l = l1 + l2
+
+        # if l1 == 0:
+        #     if len(nums2) % 2 == 0:
+        #         return (nums2[int(l2/2)] + nums2[int(l2/2)-1])/2
+        #     else:
+        #         return nums2[int((l2-1)/2)]
+
+        iMin = 0
+        iMax = l1
+        halfL = floor((l1 + l2 + 1)/2)
+        while True:
+            i = floor((iMin + iMax)/2)
+            j = halfL - i
+            if i < l1 and nums1[i] < nums2[j - 1]:
+                iMin = i + 1
+            elif i > 0 and nums1[i - 1] > nums2[j]:
+                iMax = i - 1
+            else:
+                if i == 0:
+                    maxL = nums2[j - 1]
+                elif j == 0:
+                    maxL = nums1[i - 1] 
+                else:
+                    maxL = max(nums1[i - 1], nums2[j - 1])
+
+                if l % 2 == 1:
+                    return maxL
+                
+                if i == l1:
+                    minR = nums2[j]
+                elif j == l2:
+                    minR = nums1[i]
+                else:
+                    minR = min(nums1[i], nums2[j])
+
+                return (maxL + minR)/2
+
+# 53. Maximum Subarray
+class Q53:
+    def maxSubArray(self, nums: List[int]) -> int:
+        ret = nums[0]
+        currentSum = 0
+        for x in nums:
+            currentSum += x
+            if currentSum > ret:
+                ret = currentSum
+            if currentSum < 0:
+                currentSum = 0
+        return ret
+
+# 124. Binary Tree Maximum Path Sum
+class Q124:
+    def maxPathSum(self, root: TreeNode) -> int:
+        def dfs(node: TreeNode):
+            from math import inf
+            if node is None: return
+            dfs(node.left)
+            dfs(node.right)
+
+            cumSumL = node.val
+            cumSumR = node.val
+            maxSumL = -inf
+            maxSumR = -inf
+            if node.left:
+                cumSumL += node.left.cumSum
+                maxSumL = node.left.maxSum
+            if node.right:
+                cumSumR += node.right.cumSum
+                maxSumR = node.right.maxSum
+            node.cumSum = max(cumSumL, cumSumR, 0)
+            node.maxSum = max(node.val, cumSumL, cumSumR, cumSumL + cumSumR - node.val, maxSumL, maxSumR)
+        
+        dfs(root)
+        return root.maxSum
+
+# 33. Search in Rotated Sorted Array
+class Q33:
+    def search(self, nums: List[int], target: int) -> int:
+        if len(nums) == 0:
+            return -1
+        iMin = 0
+        iMax = len(nums) - 1
+        iPiv = -1
+        while iMax - iMin > 1:
+            iMid = int((iMin+iMax+1)/2)
+            if nums[iMid] > nums[0]:
+                iMin = iMid
+            elif nums[iMid - 1] < nums[0]:
+                iMax = iMid
+            else:
+                iPiv = iMid
+                break
+        if iPiv == -1:
+            if iMin > 0 and nums[iMin] < nums[0] and nums[iMin - 1] >= nums[0]:
+                iPiv = iMin
+            elif iMax > 0 and nums[iMax] < nums[0] and nums[iMax - 1] >= nums[0]:
+                iPiv = iMax
+        if iPiv > 0:
+            nums = nums[iPiv:] + nums[:iPiv]
+        iMin = 0
+        iMax = len(nums) - 1
+        iTarget = -1
+        while iMax - iMin > 1:
+            iMid = int((iMin+iMax+1)/2)
+            if nums[iMid] > target:
+                iMax = iMid
+            elif nums[iMid] < target:
+                iMin = iMid
+            else:
+                iTarget = iMid
+                break
+
+        if iTarget == -1:
+            if nums[iMin] == target:
+                iTarget = iMin
+            elif nums[iMax] == target:
+                iTarget = iMax
+            else:
+                return -1
+        if iPiv == -1:
+            return iTarget
+        shiftL = len(nums) - iPiv
+        if iTarget < shiftL:
+            iTarget += iPiv
+        else:
+            iTarget -= shiftL
+        return iTarget
+
+# 981. Time Based Key-Value Store
+class TimeMap:
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.keyMap = {}
+    def set(self, key: str, value: str, timestamp: int) -> None:
+        if key in self.keyMap:
+            self.keyMap[key].append((timestamp, value))
+        else:
+            self.keyMap[key] = [(timestamp, value)]
+
+    def get(self, key: str, timestamp: int) -> str:
+        if key not in self.keyMap:
+            return ""
+        else:
+            q = self.keyMap[key]
+            if q[0][0] > timestamp: return ""
+            iMin = 0
+            iMax = len(q) - 1
+            iMid = 0
+            while iMax - iMin > 1:
+                iMid = int((iMin + iMax + 1)/2)
+                if q[iMid][0] > timestamp:
+                    iMax = iMid
+                elif q[iMid][0] < timestamp:
+                    iMin = iMid
+            if q[iMin][0] <= timestamp and q[iMid][0] > timestamp:
+                return q[iMin][1]
+            if q[iMax][0] <= timestamp:
+                return q[iMax][1]
+            return q[iMid][1]
+
+# 199. Binary Tree Right Side View
+class Q199:
+    def rightSideView(self, root: TreeNode) -> List[int]:
+        ret = []
+        def dfs(node: TreeNode, depth: int, nextDepth: int):
+            if node is None:
+                return nextDepth
+            if depth == nextDepth:
+                ret.append(node.val)
+                nextDepth += 1
+            nextDepth = dfs(node.right, depth + 1, nextDepth)
+            nextDepth = dfs(node.left, depth + 1, nextDepth)
             
-        dfs(0, 0)  # since this is a connected graph, we don't have to loop over all nodes.
-        return list(connections)
+            return nextDepth
+        dfs(root, 0, 0)
+        return ret
+
+# 212. Word Search II
+class Q212:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        if len(board) == 0 or len(board[0]) == 0 or len(words) == 0:
+            return []
+        trie ={}
+        rNum = len(board)
+        cNum = len(board[0])
+        EDW = "$"
+        for word in words:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EDW] = word
+        
+        ret = []
+        def backtrack(r: int, c: int, parent: dict):
+            char = board[r][c]
+            node = parent[char]
+            word = node.pop(EDW, False)
+            if word:
+                ret.append(word)
+
+            board[r][c] = '#'
+            for dr, dc in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < rNum and cc >= 0 and cc < cNum:
+                    if board[rr][cc] in node:
+                        backtrack(rr, cc, node)
+            board[r][c] = char
+            if len(node) == 0:
+                parent.pop(char)
+        for r in range(rNum):
+            for c in range(cNum):
+                if board[r][c] in trie:
+                    backtrack(r, c, trie)
+        return ret
+
+# 236. Lowest Common Ancestor of a Binary Tree
+class Q236:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        pHit, qHit = False, False
+        pPath = []
+        qPath = []
+        path = []
+        def dfs(node: TreeNode):
+            nonlocal pHit, qHit, path, pPath, qPath
+            path.append(node)
+            if node.val == p.val:
+                pHit = True
+                pPath = [x for x in path]
+            if node.val == q.val:
+                qHit = True
+                qPath = [x for x in path]
+            if not (pHit and qHit):
+                if node.left:
+                    dfs(node.left)
+                if node.right:
+                    dfs(node.right)
+            path.pop()
+        dfs(root)
+
+        for i, (pp, qq) in enumerate(zip(pPath, qPath)):
+            if pp != qq:
+                return pPath[i - 1]
+        if len(pPath) < len(qPath):
+            return pPath[-1]
+        else:
+            return qPath[-1]
+
+# 472. Concatenated Words
+class Q472:
+    def findAllConcatenatedWordsInADict(self, words: List[str]) -> List[str]:
+        trie = {}
+        words.sort(key = lambda x: len(x))
+        EOW = '$'
+        for word in words:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EOW] = {}
+
+        concatNum = {'': 0}
+        def concat_num(word: str) -> bool:
+            if word in concatNum:
+                return concatNum[word]
+
+            node = trie
+            for i, char in enumerate(word):
+                if char not in node:
+                    return 0
+                node = node[char]
+                if EOW in node:
+                    n = concat_num(word[i + 1:])
+                    if n > 0:
+                        return n + 1
+            if EOW in node: 
+                return 1
+            else:
+                return 0
+
+        ret = []
+        for word in words:
+            if len(word) == 0: continue
+            n = concat_num(word)
+            concatNum[word] = n
+            if n > 1:
+                ret.append(word)
+        return ret
+
+# 126. Word Ladder II
+class Q126:
+    class WordNode:
+        def __init__(self, word: str) -> None:
+            self.word = word
+            self.used = False
+    def findLadders(self, beginWord: str, endWord: str, wordList: List[str]) -> List[List[str]]:
+        from collections import deque
+        trie = {}
+        for word in [beginWord] + wordList:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+        word2Node = {w: self.WordNode(w) for w in [beginWord] + wordList}
+        adjacentMap = {}
+        # def backtrack(charIdx: int, matched: str, parent: dict, wildAvail: bool) -> Union[str, None]:
+        #     nonlocal q, matchingWord
+        #     if wildAvail:
+        #         for char in parent:
+        #             node = parent[char]
+        #             if char == matchingWord[charIdx]: continue 
+        #             if len(node) == 0:
+        #                 matched += char
+        #                 if matched not in existingWords:
+        #                     q.appendleft(matched)
+        #                     adjacentMap[matchingWord].append(matched)
+        #                 return
+        #             else:
+        #                 backtrack(charIdx + 1, matched + char, node, False)
+
+        #         char = matchingWord[charIdx]
+        #         if char in parent:
+        #             node = parent[char]
+        #             if len(node) == 0:
+        #                 parent.pop(char)
+        #             else:
+        #                 backtrack(charIdx + 1, matched + char, node, True)
+        #                 if len(node) == 0:
+        #                     parent.pop(char)
+        #     else:
+        #         char = matchingWord[charIdx]
+        #         matched += char
+        #         if char not in parent: return
+        #         node = parent[char]
+        #         if len(node) == 0:
+        #             if matched not in existingWords:
+        #                 q.appendleft(matched)
+        #                 adjacentMap[matchingWord].append(matched)
+        #                 return
+        #         else:
+        #             backtrack(charIdx + 1, matched, node, False)
+        def backtrack(charIdx: int, matched: str, parent: dict, wildAvail: bool) -> None:
+            nonlocal matchingWord
+            for char in parent:
+                node = parent[char]
+                if char == matchingWord[charIdx]:
+                    if len(node) == 0:
+                        if not wildAvail:
+                            adjacentMap[matchingWord].append(word2Node[matched + char])
+                    else:
+                        backtrack(charIdx + 1, matched + char, node, wildAvail)
+                else:
+                    if wildAvail:
+                        if len(node) == 0:
+                            adjacentMap[matchingWord].append(word2Node[matched + char])
+                        else:
+                            backtrack(charIdx + 1, matched + char, node, False)
+
+        # def backtrack(thisChar: str, nextCharIdx: int, matched: str, parent: dict, wildAvail: bool) -> Union[str, None]:
+        #     nonlocal q, matchingWord
+        #     node = parent[thisChar]
+        #     if len(node) == 0:
+        #         if wildAvail:
+        #             # a word itself is match in the trie, remove it
+        #             parent.pop(thisChar)
+        #             return
+        #         else:
+        #             # a neighboring word is found
+        #             q.appendleft(matched + thisChar)
+        #             return
+
+        #     if wildAvail:
+        #         for nextChar in node:
+        #             if nextChar == matchingWord[nextCharIdx]: continue
+        #             backtrack(nextChar, nextCharIdx + 1, matched + thisChar, node, False)
+            
+        #     nextChar = matchingWord[nextCharIdx]
+        #     if nextChar in node:
+        #         backtrack(nextChar, nextCharIdx + 1, matched + thisChar, node, True)
+            
+        #     if len(node) == 0:
+        #         parent.pop(thisChar)
+
+        for matchingWord in [beginWord] + wordList:
+            adjacentMap[matchingWord] = []
+            backtrack(0,"", trie, True)
+        
+        beginNode = word2Node[beginWord]
+        q = deque([[beginNode]])
+        allPath = []
+
+        while len(q) > 0:
+            path = q.pop()
+            thisNode = path[-1]
+            thisNode.used = True
+            if len(allPath) == 0 or len(path) <= len(allPath[-1]):
+                if thisNode.word == endWord:
+                    allPath.append([n.word for n in path])
+                else:
+                    for nextNode in adjacentMap[thisNode.word]:
+                        if nextNode.used: continue
+                        q.appendleft(path + [nextNode])
+
+        return allPath
+
+# 10. Regular Expression Matching
+class Q10:
+    def isMatch(self, s: str, p: str) -> bool:
+        memo ={}
+        def dp(i: int, j: int) -> bool:
+            if (i, j) not in memo:
+                if j == len(p):
+                    ans = (i == len(s))
+                else:
+                    matchFirst = i < len(s) and p[j] in [s[i], '.']
+
+                    if j + 1 < len(p) and p[j+1] == '*':
+                        ans = dp(i, j + 2) or matchFirst and dp(i + 1, j)
+                    else:
+                        ans = matchFirst and dp(i + 1, j + 1)
+                
+                memo[(i, j)] = ans
+            return memo[(i, j)]
+        return dp(0 , 0)
+
+# 22. Generate Parentheses
+class Q22:
+    def generateParenthesis(self, n: int) -> List[str]:
+        if n == 0:
+            return []
+        ret = []
+        def backtrack(openCnt: int, paren: str, lCnt: int, rCnt: int):
+            if lCnt == 0 and rCnt == 0:
+                ret.append(paren)
+                return
+            if lCnt > 0:
+                backtrack(openCnt + 1, paren + '(', lCnt - 1, rCnt)
+            if rCnt >0 and openCnt > 0:
+                backtrack(openCnt - 1, paren + ')', lCnt, rCnt - 1)
+        backtrack(0, '', n, n)
+        return  ret            
+
+# 17. Letter Combinations of a Phone Number
+class Q17:
+    def letterCombinations(self, digits: str) -> List[str]:
+        if len(digits) == 0:
+            return []
+        dig2let = {'2': ['a', 'b', 'c'], '3': ['d', 'e', 'f'], '4': ['g', 'h', 'i'], '5': ['j', 'k', 'l'], '6': ['m', 'n', 'o'], '7': ['p', 'q', 'r', 's'], '8': ['t', 'u', 'v'], '9': ['w', 'x', 'y', 'z']}
+        ret = []
+        def backtrack(i: int, s: str):
+            if i == len(digits):
+                ret.append(s)
+            else:
+                for l in dig2let[digits[i]]:
+                    backtrack(i + 1, s+l)
+        backtrack(0, '')
+        return ret
+
+# 136. Single Number
+class Q136:
+    def singleNumber(self, nums: List[int]) -> int:
+        i = 0
+        for x in nums:
+            i ^= x
+        return i
+
+# 137. Single Number II
+class Q137:
+    def singleNumber(self, nums: List[int]) -> int:
+        seenOnce = seenTwice = 0
+        for x in nums:
+            seenOnce = ~seenTwice&(x ^ seenOnce)
+            seenTwice = ~seenOnce&(x ^ seenTwice)
+        return seenOnce
+
+# 268. Missing Number
+class Q268:
+    def missingNumber(self, nums: List[int]) -> int:
+        miss = 0 ^ len(nums)
+        for i, x in enumerate(nums):
+            miss ^= i
+            miss ^= x
+        return miss
+
+# 329. Longest Increasing Path in a Matrix
+class Q329:
+    def longestIncreasingPath(self, matrix: List[List[int]]) -> int:
+        if len(matrix) == 0:
+            return 0
+        R = len(matrix)
+        C = len(matrix[0])
+        memo  = [[0]*len(matrix[0]) for _ in range(R)]
+        def dfs(r, c):
+            nonlocal memo, R, C
+            maxL = 0
+            for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                rr = r + dr
+                cc = c + dc
+                if rr >= 0 and rr < R and cc >= 0 and cc < C and matrix[rr][cc] > matrix[r][c]:
+                    if memo[rr][cc] == 0:
+                        dfs(rr, cc)
+                    maxL = max(maxL, memo[rr][cc])
+            memo[r][c] = maxL + 1
+        maxL = 0
+        for r in range(R):
+            for c in range(C):
+                if memo[r][c] == 0:
+                    dfs(r, c)
+                maxL = max(maxL, memo[r][c])
+        return maxL
+
+# 207. Course Schedule
+class Solution:
+    def __init__(self) -> None:
+        self.WHITE = 0
+        self.GREY = 1
+        self.BLACK = 2
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        adjacentMap = {i:[] for i in range(numCourses)}
+        colorMap = {i: self.WHITE for i in range(numCourses)}
+        for p in prerequisites:
+            adjacentMap[p[0]].append(p[1])
+        def dfs(c)->bool:
+            nonlocal colorMap
+            colorMap[c] = self.GREY
+            for p in adjacentMap[c]:
+                pColor = colorMap[p]
+                if pColor == self.GREY: return False
+                if pColor == self.BLACK: continue
+                if not dfs(p): return False
+            colorMap[c] = self.BLACK
+            return True
+        for c in range(numCourses):
+            if colorMap[c] == self.WHITE:
+                if not dfs(c): return False
+        return True
+
+# 210. Course Schedule II
+class Q210:
+    def __init__(self) -> None:
+        self.WHITE = 0
+        self.GREY = 1
+        self.BLACK = 2
+    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        adjacentMap = {i:[] for i in range(numCourses)}
+        colorMap = {i: self.WHITE for i in range(numCourses)}
+        for p in prerequisites:
+            adjacentMap[p[0]].append(p[1])
+        order = []
+        def dfs(c)->bool:
+            nonlocal colorMap, order
+            colorMap[c] = self.GREY
+            for p in adjacentMap[c]:
+                pColor = colorMap[p]
+                if pColor == self.GREY: return False
+                if pColor == self.BLACK: continue
+                if not dfs(p): return False
+            colorMap[c] = self.BLACK
+            order.append(c)
+            return True
+        for c in range(numCourses):
+            if colorMap[c] == self.WHITE:
+                if not dfs(c): return []
+        return order
+
+# 85. Maximal Rectangle
+class Q85:
+    def maximalRectangle(self, matrix: List[List[str]]) -> int:
+        if len(matrix) == 0:
+            return 0
+        R = len(matrix)
+        C = len(matrix[0])
+        leftMost1 = [0]*C
+        rightMost1 = [C]*C
+        height = [0]*C
+        maxArea = 0
+        for r in range(R):
+            curLeft = 0
+            curRight = C
+            for c in range(C):
+                if matrix[r][c] == '1':
+                    # compute the height of 1
+                    height[c] += 1
+                    # compute left boundary of 1
+                    leftMost1[c] = max(curLeft, leftMost1[c])
+                else:
+                    height[c] = 0
+                    leftMost1[c] = 0
+                    curLeft = c + 1
+                cc = C - c - 1
+                if matrix[r][cc] == '1':
+                    rightMost1[cc] = min(curRight, rightMost1[cc])
+                else:
+                    rightMost1[cc] = C
+                    curRight = cc
+            for c in range(C):
+                maxArea = max(maxArea, height[c]*(rightMost1[c]-leftMost1[c]))
+        return maxArea
+
+# 84. Largest Rectangle in Histogram
+class Q84:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        s = [(-1, -1)]
+        maxArea = 0
+        for i, x in enumerate(heights):
+            if x < s[-1][1]:
+                iH, xH = s[-1]
+                while s[-1][1] > x:
+                    _, xH = s.pop()
+                    maxArea = max(maxArea, xH*(iH-s[-1][0]))
+            s.append((i, x))
+        iH, xH = s[-1]
+        while len(s) > 1:
+            _, xH = s.pop()
+            maxArea = max(maxArea, xH*(iH-s[-1][0]))
+        return maxArea
+
+# 121. Best Time to Buy and Sell Stock
+class Q121:
+    def maxProfit(self, prices: List[int]) -> int:
+        profit = 0
+        buyPrice = prices[0]
+        for x in prices[1:]:
+            if x < buyPrice:
+                buyPrice = x
+            else:
+                profit = max(profit, x-buyPrice)
+        return profit
+
+# 139. Word Break
+class Q139:
+    def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+        trie = {}
+        EOW = '$'
+        for word in wordDict:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node[EOW] = {}
+
+        memo = {}
+        def backtrack(s: str) -> bool:
+            if s in memo:
+                return memo[s]
+            
+            node = trie
+            canBreak = False
+            for i, char in enumerate(s):
+                if char not in node:
+                    canBreak = False
+                    break
+                else:
+                    node = node[char]
+                    if EOW in node and (i+1 == len(s) or backtrack(s[i+1:])):
+                        canBreak = True
+                        break
+            memo[s] = canBreak
+            return canBreak
+        return backtrack(s)
+
+# 322. Coin Change
+class Q322:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        memo = {0:0}
+        coins = sorted(coins)
+        def dp(amount: int) -> int:
+            if amount not in memo:
+                minCoinNum = amount
+                canChange = False
+                rAmount = amount
+                for c in coins:
+                    if c > amount: break
+                    for cNum in range(amount//c+1):
+                        rAmount = amount % c
+                        if rAmount == 0:
+                            minCoinNum = min(minCoinNum, cNum)
+                            canChange = True
+                            continue
+                        if rAmount < coins[0]: 
+                            continue
+                        rNum = dp(rAmount)
+                        if rNum >= 0:
+                            minCoinNum = min(minCoinNum, cNum + rNum)
+                            canChange = True
+                if canChange:
+                    memo[amount] = minCoinNum
+                else:
+                    memo[amount] = -1
+            return memo[amount]
+        return dp(amount)
+    
+    def coinChangeV2(self, coins: List[int], amount: int) -> int:
+        memo = {0:0}
+        coins = sorted(coins)
+        def dp(amount: int) -> int:
+            if amount not in memo:
+                minCoinNum = amount
+                canChange = False
+                for c in coins:
+                    if c > amount: break
+                    cNum = dp(amount - c)
+                    if cNum >= 0:
+                        minCoinNum = min(minCoinNum, 1 + cNum)
+                        canChange = True
+
+                if canChange:
+                    memo[amount] = minCoinNum
+                else:
+                    memo[amount] = -1
+            return memo[amount]
+        return dp(amount)
+
+# 91. Decode Ways
+class Q91:
+    def numDecodings(self, s: str) -> int:
+        for i,x in enumerate(s):
+            if x == '0' and (i == 0 or s[i-1] not in ['1', '2']):
+                return 0
+        memo = {'': 1}
+        def dp(s) ->int:
+            if s not in memo:
+                if s[0] == '0':
+                    return 0
+                if len(s) >= 2 and int(s[:2]) <= 26:
+                    memo[s] = dp(s[1:]) + dp(s[2:])
+                else:
+                    memo[s] = dp(s[1:])
+            return memo[s]
+        return dp(s)
+    
+    def numDecodingsV2(self, s: str) -> int:
+        ret = 1
+        for i, x in list(enumerate(s))[::-1]:
+            if x == '0':
+                if i == 0 or (s[i-1] not in ['1', '2']):
+                    return 0
+            elif i > 0 and int(s[i-1:i+1]) < 26:
+                ret += 1
+        return ret
+
+# 127. Word Ladder
+class Q127:
+    def ladderLength(self, beginWord: str, endWord: str, wordList: List[str]) -> int:
+        from collections import deque
+        trie = {}
+        for word in [beginWord] + wordList:
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+        
+        nextWord = {}
+        def backtrack(matchedWord: str, parentNode: dict, wildCard: bool):
+            nonlocal word, q
+            thisChar = matchedWord[-1]
+            if len(matchedWord) == len(word):
+                if not wildCard:
+                    # a neighbor word is matched
+                    nextWord[word].append(matchedWord)
+                    q.appendleft(matchedWord)
+                parentNode.pop(thisChar)
+                return -1
+            else:
+                thisNode = parentNode[thisChar]
+                for nextChar in list(thisNode.keys()):
+                    if word[len(matchedWord)] == nextChar:
+                        backtrack(matchedWord+nextChar, thisNode, wildCard)
+                    elif wildCard:
+                        backtrack(matchedWord+nextChar, thisNode, False)
+                if len(thisNode) == 0:
+                    parentNode.pop(thisChar)
+                return -1
+
+        q = deque([beginWord])
+        pathLen = 0
+        while len(q) > 0:
+            pathLen += 1
+            for _ in range(len(q)):
+                word = q.pop()
+                if word == endWord:
+                    return pathLen
+                nextWord[word] = []
+                for char in list(trie.keys()):
+                    if word[0] == char:
+                        backtrack(char, trie, True)
+                    else:
+                        backtrack(char, trie, False)
+        return 0
+
+# 763. Partition Labels
+class Q763:
+    def partitionLabels(self, S: str) -> List[int]:
+        charOrder = {}
+        firstLastIdx = []
+        for i,x in enumerate(S):
+            if x in charOrder:
+                # set last appearance position of x
+                firstLastIdx[charOrder[x]][1] = i
+            else:
+                charOrder[x] = len(firstLastIdx)
+                firstLastIdx.append([i, i])
+        ret = []
+        overLapInterval = [0, 0]
+        for interval in firstLastIdx:
+            if interval[0] <= overLapInterval[1]:
+                overLapInterval[1] = max(interval[1], overLapInterval[1])
+            else:
+                ret.append(overLapInterval[1] - overLapInterval[0] + 1)
+                overLapInterval = interval
+        ret.append(overLapInterval[1] - overLapInterval[0] + 1)
+        return ret
+
+# 56. Merge Intervals
+class Q56:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        if len(intervals) == 0:
+            return []
+        intervals.sort()
+        ret = []
+        overLapInterval = intervals[0]
+        for interval in intervals[1:]:
+            if interval[0] <= overLapInterval[1]:
+                overLapInterval[1] = max(interval[1], overLapInterval[1])
+            else:
+                ret.append(overLapInterval)
+                overLapInterval = interval
+        ret.append(overLapInterval)
+        return ret
+
+# 588. Design In-Memory File System
+class FileSystem:
+
+    def __init__(self):
+        self.file = {'':{}}
+
+    def parse_path(self, path):
+        path = path.split('/')
+        if len(path[-1]) == 0:
+            path = path[:-1]
+        return path
+
+    def ls(self, path: str) -> List[str]:
+        path = self.parse_path(path)
+        ret = []
+        node = self.file
+        for p in path:
+            node = node[p]
+        if type(node) == str:
+            ret.append(p)
+        else:
+            for f in node:
+                ret.append(f)
+        ret.sort()
+        return ret
+
+    def mkdir(self, path: str) -> None:
+        path = self.parse_path(path)
+        node = self.file
+        for p in path:
+            node = node.setdefault(p, {})
+        
+
+    def addContentToFile(self, filePath: str, content: str) -> None:
+        path = self.parse_path(filePath)
+        if len(path[-1]) == 0:
+            path = path[:-1]
+        node = self.file
+        for p in path[:-1]:
+            node = node.setdefault(p, {})
+        if path[-1] in node:
+            node[path[-1]] += content
+        else:
+            node[path[-1]] = content
+
+    def readContentFromFile(self, filePath: str) -> str:
+        path = self.parse_path(filePath)
+        node = self.file
+        for p in path:
+            node = node[p]
+        return node
+
+# 224. Basic Calculator
+class Q244:
+    def eval(self, l: list) -> int:
+        ret = 0
+        neg = False
+        ans = l[0]
+        i = 1
+        while i < len(l) - 1:
+            if l[i] in ('+', '-'):
+                if neg:
+                    ret -= ans
+                else:
+                    ret += ans
+                if l[i] == '-':
+                    neg = True
+                else:
+                    neg = False
+                ans = l[i+1]
+            else:
+                if l[i] == '*':
+                    ans = ans * l[i+1]
+                else:
+                    ans = ans // l[i+1]
+            i += 2
+        if neg:
+            ret -= ans
+        else:
+            ret += ans
+        return ret
+
+
+    def preporcess(self, s: str) -> List:
+        s = s.replace(' ', '')
+        ret = []
+        numStr = ''
+        for x in s:
+            if x in ['+', '-', '*', '/', '(', ')']:
+                if len(numStr) > 0:
+                    ret.append(int(numStr))
+                    numStr = ''
+                ret.append(x)
+            else:
+                numStr += x
+        if len(numStr) > 0:
+            ret.append(int(numStr))
+        return ret
+
+    def calculate(self, s: str) -> int:
+        s = self.preporcess(s)
+
+        parenCnt = 0
+        segS = [[]]
+        for i, x in enumerate(s):
+            if x == '(':
+                parenCnt += 1
+                segS.append([])
+                continue
+            if x == ')':
+                segEval = self.eval(segS.pop())
+                segS[-1].append(segEval)
+                continue
+            segS[-1].append(x)
+        return self.eval(segS[0])
+
+# 772. Basic Calculator III
+Q772 = Q244
+
+# 227. Basic Calculator II
+class Q227:
+    def eval(self, l: list) -> int:
+        ret = 0
+        neg = False
+        ans = l[0]
+        i = 1
+        while i < len(l) - 1:
+            if l[i] in ('+', '-'):
+                if neg:
+                    ret -= ans
+                else:
+                    ret += ans
+                if l[i] == '-':
+                    neg = True
+                else:
+                    neg = False
+                ans = l[i+1]
+            else:
+                if l[i] == '*':
+                    ans = ans * l[i+1]
+                else:
+                    ans = ans // l[i+1]
+            i += 2
+        if neg:
+            ret -= ans
+        else:
+            ret += ans
+        return ret
+
+
+    def preporcess(self, s: str) -> List:
+        s = s.replace(' ', '')
+        ret = []
+        numStr = ''
+        for x in s:
+            if x in ['+', '-', '*', '/']:
+                if len(numStr) > 0:
+                    ret.append(int(numStr))
+                    numStr = ''
+                ret.append(x)
+            else:
+                numStr += x
+        if len(numStr) > 0:
+            ret.append(int(numStr))
+        return ret
+
+    def calculate(self, s: str) -> int:
+        return self.eval(self.preporcess(s))
+
+# 238. Product of Array Except Self
+class Q238:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        productL = [1]*len(nums)
+        productL[1] = nums[0]
+        for i in range(2, len(nums)):
+            productL[i] = nums[i-1]*productL[i-1]
+        productR = 1
+        for i in range(len(nums)-1, -1, -1):
+            productL[i] = productR*productL[i]
+            productR = productR*nums[i]
+        return productL
+
+# 348. Design Tic-Tac-Toe
+class TicTacToe:
+    def __init__(self, n: int):
+        """
+        Initialize your data structure here.
+        """
+        self.rowCnt = {1:{i:0 for i in range(n)}, 2:{i:0 for i in range(n)}}
+        self.colCnt = {1:{i:0 for i in range(n)}, 2:{i:0 for i in range(n)}}
+        self.diaCnt = {1:0, 2:0}
+        self.invDiaCnt = {1:0, 2:0}
+        self.n = n
+
+    def move(self, row: int, col: int, player: int) -> int:
+        """
+        Player {player} makes a move at ({row}, {col}).
+        @param row The row of the board.
+        @param col The column of the board.
+        @param player The player, can be either 1 or 2.
+        @return The current winning condition, can be either:
+                0: No one wins.
+                1: Player 1 wins.
+                2: Player 2 wins.
+        """
+        self.rowCnt[player][row] += 1
+        self.colCnt[player][col] += 1
+        if row == col:
+            self.diaCnt[player] += 1
+        if row + col == self.n - 1:
+            self.invDiaCnt[player] += 1
+
+        if (self.rowCnt[player][row] == self.n) or (self.colCnt[player][col] == self.n) or (self.diaCnt[player] == self.n) or (self.invDiaCnt[player] == self.n):
+            return player
+        else:
+            return 0
+
+# 301. Remove Invalid Parentheses
+class Q301:
+    # def removeInvalidParentheses(self, s: str) -> List[str]:
+    #     pCnt = 0
+    #     sSegIdx = [[0, 0, pCnt]]
+    #     rParenCnt = [0]*len(s)
+    #     for i in range(0, len(s)):
+    #         if s[i] == '(':
+    #             if pCnt > 0:
+    #                 # start a new validation segment
+                    
+    #                 sSegIdx[-1][1] = i
+    #                 sSegIdx.append([i, i, -1])
+    #                 pCnt = -1
+    #                 rParenCnt = [i] = 0
+
+
+    #             else:
+    #                 pCnt -= 1
+    #         elif s[i] == ')':
+    #             pCnt += 1
+    #     sSegIdx[-1][1] = len(s)
+    #     sSegIdx[-1][2] = pCnt
+
+    #     def backtrack(sIdx: int, eIdx:int, rmPCnt:int, fixed: set):
+    #         if rmPCnt == (eIdx - sIdx):
+    #             fixed.add()
+
+    #     fixedSeg = []
+    #     for si in sSegIdx[:-1]:
+        
+    def removeInvalidParentheses(self, s: str) -> List[str]:
+        ret = set()
+        minRm = len(s)
+        def backtrack(prevS, i, pCnt, rmCnt):
+            nonlocal s, minRm
+            if i == len(s):
+                if pCnt == 0:
+                    if rmCnt <= minRm:
+                        ret.add(prevS)
+                        minRm = rmCnt
+            else:
+                if s[i] == '(':
+                    if rmCnt < minRm:
+                        backtrack(prevS, i+1, pCnt, rmCnt + 1) # remove
+                    else:
+                        # pruning, expression is impossible to be valid if no more remove can be done
+                        if pCnt - 1 + (len(s)-i) < 0:
+                            return
+                    backtrack(prevS+'(', i+1, pCnt-1, rmCnt) # not remove
+                elif s[i] == ')':
+                    if rmCnt < minRm:
+                        backtrack(prevS, i+1, pCnt, rmCnt + 1) # remove
+                    else:
+                        if pCnt + 1 > 0:
+                            return
+                    if pCnt < 0:
+                        # we can keep ) only if we have unmatched (
+                        backtrack(prevS+')', i+1, pCnt+1, rmCnt)
+                else:
+                    # keep other characters
+                    backtrack(prevS+s[i], i+1, pCnt, rmCnt)
+        backtrack('', 0, 0, 0)
+        return [x for x in ret if len(x) == len(s) - minRm]
+
+# 31. Next Permutation
+class Q31:
+    def nextPermutation(self, nums: List[int]) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        for i in range(len(nums) - 2, -1, -1):
+            if nums[i] < nums[i+1]:
+                for j in range(len(nums) - 1, i, -1):
+                    if nums[i] < nums[j]:
+                        nums[i], nums[j] = nums[j], nums[i]
+                        break
+                nums[i+1:] = sorted(nums[i+1:])
+                return
+        nums[:] = nums[-1::-1]
+
+# 560. Subarray Sum Equals K
+class Q560:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        cnt = 0
+        sumDict = {0:1}
+        csum = 0
+        for x in nums:
+            csum += x
+            cnt += sumDict.get(csum - k, 0)
+            sumDict[csum] = sumDict.get(csum, 0) + 1
+        return cnt
+
+# 215. Kth Largest Element in an Array
+class Q215:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        from heapq import heappush, heappop, heappushpop, heapify
+        kLargest = nums[:k]
+        heapify(kLargest)
+        for x in nums[k:]:
+            if x > kLargest[0]:
+                heappushpop(kLargest, x)
+        return kLargest[0]
+
+# 528. Random Pick with Weight
+class Q528:
+    from random import randint
+    from bisect import bisect_left
+    def __init__(self, w: List[int]):
+         
+        self.culmW = []
+        s = 0
+        for x in w:
+            s += x
+            self.culmW.append(s)
+
+    def pickIndex(self) -> int:
+        w = randint(1, self.culmW[-1])
+        i = bisect_left(self.culmW, w)
+        return i
+
+# 986. Interval List Intersections
+class Q986:
+    def intervalIntersection(self, A: List[List[int]], B: List[List[int]]) -> List[List[int]]:
+        ret = []
+        aIdx = 0
+        bIdx = 0
+        while aIdx < len(A) and bIdx < len(B):
+            if A[aIdx][0] <= B[bIdx][0] <= A[aIdx][1]:
+                ret.append([B[bIdx][0], min(A[aIdx][1], B[bIdx][1])])
+            elif B[bIdx][0] <= A[aIdx][0] <= B[bIdx][1]:
+                ret.append([A[aIdx][0], min(B[bIdx][1], A[aIdx][1])])
+            
+            if A[aIdx][1] < B[bIdx][1]:
+                aIdx += 1
+            elif A[aIdx][1] > B[bIdx][1]:
+                bIdx += 1
+            else:
+                aIdx += 1
+                bIdx += 1
+        return ret
+
+# 953. Verifying an Alien Dictionary
+class Q953:
+    def isAlienSorted(self, words: List[str], order: str) -> bool:
+        order = {x:i for i, x in enumerate(order)}
+        for w1, w2 in zip(words[:-1], words[1:]):
+            for i, (char1, char2) in enumerate(zip(w1, w2)):
+                if char1 != char2:
+                    if order[char1] > order[char2]:
+                        return False
+                    else:
+                        break
+                else:
+                    if i == len(w2) - 1 < len(w1) -1:
+                        return False
+        return True
+
+# 173. Binary Search Tree Iterator
+class BSTIterator:
+    def __init__(self, root: TreeNode):
+        self.path = []
+        self.finished = []
+        self.pNext = root
+        while self.pNext and self.pNext.left:
+            self.path.append(self.pNext)
+            self.finished.append(False)
+            self.pNext = self.pNext.left
+
+    def go_next(self):
+        if self.pNext.right:
+            self.path.append(self.pNext)
+            self.finished.append(True)
+            self.pNext = self.pNext.right
+            while self.pNext and self.pNext.left:
+                self.path.append(self.pNext)
+                self.finished.append(False)
+                self.pNext = self.pNext.left
+        else:
+            while len(self.finished) > 0 and self.finished[-1]:
+                self.path.pop()
+                self.finished.pop()
+            if len(self.path) > 0:
+                self.pNext = self.path.pop()
+                self.finished.pop()
+            else:
+                self.pNext = None
+
+    def next(self) -> int:
+        """
+        @return the next smallest number
+        """
+        ret = self.pNext.val
+        self.go_next()
+        return ret
+
+
+    def hasNext(self) -> bool:
+        """
+        @return whether we have a next smallest number
+        """
+        return self.pNext is not None
+
+# 438. Find All Anagrams in a String
+class Q438:
+    def findAnagrams(self, s: str, p: str) -> List[int]:
+        ret = []
+        pCharCnt = {}
+        for pi in p:
+            pCharCnt[pi] = pCharCnt.get(pi, 0) + 1
+        
+        winCharCnt = {pi: 0 for pi in p}
+        cnt = 0
+        idx = 0
+        for i, si in enumerate(s):
+            if si not in pCharCnt:
+                cnt = 0
+                idx = i+1
+                winCharCnt = {pi: 0 for pi in p}
+                continue
+
+            winCharCnt[si] = winCharCnt[si] + 1
+
+            while winCharCnt[si] > pCharCnt[si]:
+                winCharCnt[s[idx]] -= 1
+                cnt -= 1
+                idx += 1
+
+            cnt += 1
+            if cnt == len(p):
+                ret.append(idx)
+                winCharCnt[s[idx]] -= 1
+                cnt -= 1
+                idx += 1
+        return ret
+
+# 636. Exclusive Time of Functions
+class Q636:
+    def exclusiveTime(self, n: int, logs: List[str]) -> List[int]:
+        ret = [0]*n
+        funcStack = []
+        startTime = []
+        waitTime = []
+        for l in logs:
+            l = l.split(':')
+            fid = int(l[0])
+            t = int(l[2])
+            if l[1] == 'start':
+                funcStack.append(fid)
+                startTime.append(t)
+                waitTime.append(0)
+            else:
+                tSpan = t - startTime.pop() + 1
+                assert fid == funcStack.pop()
+                ret[fid] += (tSpan - waitTime.pop())
+                waitTime[-1] += tSpan
+        return ret
+
+# 1249. Minimum Remove to Make Valid Parentheses
+class Q1249:
+    def minRemoveToMakeValid(self, s: str) -> str:
+        ret = ''
+        openCnt = 0
+        for si in s:
+            if si == '(':
+                openCnt += 1
+                ret += '('
+            elif si == ')':
+                if openCnt > 0:
+                    ret += ')'
+                    openCnt -= 1
+            else:
+                ret += si
+        if openCnt > 0:
+            ret = ret[::-1].replace('(', '', openCnt)[::-1]
+        return ret
+
+# 34. Find First and Last Position of Element in Sorted Array
+class Q34:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        minIdx = 0
+        maxIdx = len(nums) - 1
+        lIdx = -1
+        while maxIdx > minIdx:
+            midIdx = int((maxIdx+minIdx+1)/2)
+            if (nums[midIdx] > target) or (midIdx > 0 and nums[midIdx - 1] == target):
+                if maxIdx == midIdx:
+                    if nums[minIdx] == target:
+                        lIdx = minIdx
+                    break
+                else:
+                    maxIdx = midIdx
+            elif nums[midIdx] < target:
+                if minIdx == midIdx:
+                    if nums[maxIdx] == target:
+                        lIdx = maxIdx
+                    break
+                else:
+                    minIdx = midIdx
+            else:
+                lIdx = midIdx
+                break
+
+        if len(nums) == 1:
+            if nums[0] == target:
+                return [0, 0]
+
+        if lIdx == -1:
+            return [-1, -1]
+
+        minIdx = lIdx
+        maxIdx = len(nums) - 1
+        rIdx = maxIdx
+        while maxIdx > minIdx:
+            midIdx = int((maxIdx+minIdx+1)/2)
+            if (nums[midIdx] > target):
+                if maxIdx == midIdx:
+                    if nums[minIdx] == target:
+                        rIdx = minIdx
+                    break
+                else:
+                    maxIdx = midIdx
+            elif (midIdx < len(nums) - 1) and (nums[midIdx+1] == target):
+                if minIdx == midIdx:
+                    if nums[maxIdx] == target:
+                        rIdx = maxIdx
+                    break
+                else:
+                    minIdx = midIdx
+            else:
+                rIdx = midIdx
+                break
+        return [lIdx, rIdx]
+
+# 158. Read N Characters Given Read4 II - Call multiple times
+# The read4 API is already defined for you.
+inputFile = "123456789123456789123456789"
+readIdx = 0
+def read4(buf4: List[str]) -> int:
+    global readIdx, inputFile
+    if readIdx >= len(inputFile):
+        return 0
+
+    if readIdx + 4 <= len(inputFile):
+        buf4[:] = inputFile[readIdx:readIdx+4]
+        readIdx += 4
+        return 4
+    else:
+        readCnt = len(inputFile)-readIdx
+        buf4[:readCnt] = inputFile[readIdx:]
+        readIdx += readCnt
+        return readCnt
+
+
+class Q158:
+    def __init__(self) -> None:
+        self.buff4 = ['0']*4
+        self.preread()
+
+    def preread(self):
+        self.remainCnt = read4(self.buff4)
+        self.buffIdx = 0
+
+    def read(self, buf: List[str], n: int) -> int:
+        buf[:] = ['']*len(buf)
+
+        readCnt = 0
+        while n > 0:
+            if self.remainCnt <= n:
+                buf[readCnt: readCnt+self.remainCnt] = self.buff4[self.buffIdx:self.buffIdx+self.remainCnt]
+                readCnt += self.remainCnt
+                n -= self.remainCnt
+
+                self.preread()
+                if self.remainCnt == 0:
+                    break
+            else:
+                buf[readCnt: readCnt+n] = self.buff4[self.buffIdx:self.buffIdx+n]
+                readCnt += n
+                self.remainCnt -= n
+                self.buffIdx += n
+                n = 0
+        return readCnt
+
+# 415. Add Strings
+class Q415:
+    def addStrings(self, num1: str, num2: str) -> str:
+        from itertools import zip_longest
+        nums = [0, 0]
+        digit2Str = {i:str(i) for i in range(10)}
+        str2Digit = {str(i):i for i in range(10)}
+        ret = ''
+        carrry = False
+        for d1, d2 in zip_longest(num1[::-1], num2[::-1]):
+            if d1 and d2:
+                d1 = str2Digit[d1]
+                d2 = str2Digit[d2]
+                s = d1 + d2
+            else:
+                if d1:
+                    s = str2Digit[d1]
+                else:
+                    s = str2Digit[d2]
+            if carrry:
+                s += 1
+                carrry = False
+            if s >= 10:
+                s -= 10
+                carrry = True
+            ret = digit2Str[s]+ret
+        if carrry:
+            ret = '1'+ret
+        return ret
+
+# 133. Clone Graph
+# Definition for a Node.
+class Node:
+    def __init__(self, val = 0, neighbors = None):
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
+
+
+class Q133:
+    def cloneGraph(self, node: 'Node') -> 'Node':
+        if node is None:
+            return None
+        nodeDict = {}
+        dstNode = nodeDict.setdefault(node.val, Node(node.val))
+        nodes = set()
+        def dfs(srcNode: 'Node', dstNode: 'Node'):
+            nodes.add(dstNode.val)
+            for srcChild in srcNode.neighbors:
+                dstChild = nodeDict.setdefault(srcChild.val, Node(srcChild.val))
+                dstNode.neighbors.append(dstChild)
+                if dstChild.val not in nodes:
+                    dfs(srcChild, dstChild)
+        dfs(node, dstNode)
+        return dstNode
+        
+# 50. Pow(x, n)
+class Q50:
+    def myPow(self, x: float, n: int) -> float:
+        if n == 0:
+            return 1.0
+        power = 1
+        ret = x
+        powTable = {1:x}
+        nextPow = 1
+        while power < abs(n):
+            ret *= powTable[nextPow]
+            power += nextPow
+            powTable[power] = ret
+            nextPow *= 2
+            while nextPow + power > abs(n):
+                nextPow /= 2
+        if n > 0:
+            return ret
+        else:
+            return 1/ret
+
+# 340. Longest Substring with At Most K Distinct Characters
+class Q340:
+    def lengthOfLongestSubstringKDistinct(self, s: str, k: int) -> int:
+        if k == 0:
+            return 0
+        maxL = 0
+        lIdx = 0
+        charSet = set()
+        for rIdx in range(0, len(s)):
+            charSet.add(s[rIdx])
+            if len(charSet) > k:
+                while s[lIdx] == s[rIdx]:
+                    lIdx += 1
+                charSet.remove(s[lIdx])
+                lIdx += 1
+            else:
+                maxL = max(maxL, len(charSet))
+        return maxL
 
 # 88. Merge Sorted Array
 class Q88: 
@@ -953,8 +2563,10 @@ class Q721:
         return ret
 
 if __name__ == '__main__':
-    q = Q1192()
-    print(q.criticalConnections(5, [[1,0],[2,0],[3,2],[4,2],[4,3],[3,0],[4,0]]))
+    q = Q340()
+    print(q.lengthOfLongestSubstringKDistinct('eceba', 2))
+ 
+
     # q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
