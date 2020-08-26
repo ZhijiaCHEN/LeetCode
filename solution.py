@@ -2684,6 +2684,91 @@ class Q314:
         rCol = max(colIdx)
         return [colDict[i] for i in range(lCol, rCol+1)]
 
+# 543. Diameter of Binary Tree
+class Q543:
+    def diameterOfBinaryTree(self, root: TreeNode) -> int:
+        if root is None:
+            return 0
+        def dfs(node: TreeNode):
+            lH = 0
+            lMax = 0
+            if node.left:
+                (lH, lMax) = dfs(node.left)
+            rH = 0
+            rMax = 0
+            if node.right:
+                (rH,  rMax) = dfs(node.right)
+            return (max(lH, rH) + 1, max(lMax, rMax, lH + rH + 1))
+        return dfs(root) - 1
+
+# 938. Range Sum of BST
+class Q938:
+    def rangeSumBST(self, root: TreeNode, L: int, R: int) -> int:
+        # sum(node.val) for all node in root such that L <= node.val <= R
+        if root is None:
+            return 0
+
+        def dfs(node: TreeNode):
+            sL = 0
+            sR = 0
+            if node.val <= L:
+                if node.right:
+                    sR = dfs(node.right)
+            elif node.val >= R:
+                if node.left:
+                    sL = dfs(node.left)
+            else:
+                if node.left:
+                    sL = dfs(node.left)
+                if node.right:
+                    sR = dfs(node.right)
+            if L <= node.val <= R:
+                return sL + sR + node.val
+            else:
+                return sL + sR
+        return dfs(root)
+
+# 65. Valid Number
+class Q65:
+    def isNumber(self, s: str) -> bool:
+        s = s.strip(' ')
+        if len(s) == 0:
+            return False
+        digit = set([str(i) for i in range(10)])
+        s = s.split('e')
+        if len(s) > 2:
+            return False
+        sCheck = []
+
+        s1 = s[0]
+        if len(s1) > 0 and s1[0] in ['-', '+']:
+            s1 = s1[1:]
+        if len(s1) == 0:
+            return False
+        dotSplit = s1.split('.')
+        if len(dotSplit) == 1:
+            sCheck.append(dotSplit[0])
+        elif len(dotSplit) == 2:
+            if len(dotSplit[0]) + len(dotSplit[1]) == 0:
+                return False
+            sCheck.append(dotSplit[0])
+            sCheck.append(dotSplit[1])
+        else:
+            return False
+
+        if len(s) == 2:
+            s2 = s[1]
+            if len(s2) > 0 and s2[0] in ['-', '+']:
+                s2 = s2[1:]
+            if len(s2) == 0:
+                return False
+            sCheck.append(s2)
+
+        for ss in sCheck:
+            for x in ss:
+                if x not in digit:
+                    return False
+        return True
 
 if __name__ == '__main__':
     q = Q680()
