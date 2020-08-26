@@ -2618,9 +2618,76 @@ class Q1428:
                     cIdxMin = c
         return cIdxMin
 
+# 680. Valid Palindrome II
+class Q680:
+    def validPalindrome(self, s: str) -> bool:
+        for i in range(len(s)//2):
+            if s[i] != s[~i]:
+                j = len(s)-i-1
+                if not (s[i:j] == s[i:j][::-1] or s[i+1:j+1] == s[i+1:j+1][::-1]):
+                    return False
+        return True
+
+# 67. Add Binary
+class Q67:
+    def addBinary(self, a: str, b: str) -> str:
+        from itertools import zip_longest
+        carry = False
+        s = ''
+        for ai, bi in zip_longest(a[::-1], b[::-1], fillvalue = '0'):
+            if ai == bi == '1':
+                if carry:
+                    s+='1'
+                else:
+                    s+='0'
+                carry = True
+            elif ai == bi == '0':
+                if carry:
+                    s+='1'
+                else:
+                    s+='0'
+                carry = False
+            else:
+                if carry:
+                    s+='0'
+                else:
+                    s+='1'
+        if carry:
+            s += '1'
+        return s[::-1]
+
+# 314. Binary Tree Vertical Order Traversal
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Q314:
+    def verticalOrder(self, root: TreeNode) -> List[List[int]]:
+        from collections import deque
+        colDict = {}
+        q = deque([(root, 0)])
+        while len(q) > 0:
+            (node, col) = q.pop()
+            if col in colDict:
+                colDict[col].append(node.val)
+            else:
+                colDict[col] = [node.val]
+            if node.left:
+                q.appendleft((node.left, col - 1))
+            if node.right:
+                q.appendleft((node.right, col + 1))
+
+        colIdx = [k for k in colDict]
+        lCol = min(colIdx)
+        rCol = max(colIdx)
+        return [colDict[i] for i in range(lCol, rCol+1)]
+
+
 if __name__ == '__main__':
-    q = Q340()
-    print(q.lengthOfLongestSubstringKDistinct('eceba', 2))
+    q = Q680()
+    print(q.validPalindrome("eccer"))
  
 
     # q.put(4,4)
