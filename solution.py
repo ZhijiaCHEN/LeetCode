@@ -2770,6 +2770,80 @@ class Q65:
                     return False
         return True
 
+# 29. Divide Two Integers
+class Q29:
+    def divide(self, dividend: int, divisor: int) -> int:
+        positive = (dividend >= 0 and divisor > 0) or (dividend < 0 and divisor < 0)
+        dividend = abs(dividend)
+        multi = abs(divisor)
+        if dividend < multi:
+            return 0
+
+        q = 1
+        multiList = [(1, multi)]
+        while multi + multi <= dividend:
+            multi += multi
+            q += q
+            multiList.append((q, multi))
+
+        while len(multiList) > 0:
+            qs, ms = multiList.pop()
+            while multi + ms <= dividend:
+                q += qs
+                multi += ms
+        
+        if positive:
+            if q >= 2**31:
+                return 2**31 - 1
+            else:
+                return q
+        else:
+            if q > 2**31:
+                return 2**31 - 1
+            else:
+                return -q
+
+# 282. Expression Add Operators
+
+
+# 249. Group Shifted Strings
+class Q249:
+    def groupStrings(self, strings: List[str]) -> List[List[str]]:
+        shiftDict = {}
+        for s in strings:
+            ascii = [ord(x) for x in s]
+            key = tuple(a - ascii[0] if a >= ascii[0] else a - ascii[0] + 26 for a in ascii)
+            if key in shiftDict:
+                shiftDict[key].append(s)
+            else:
+                shiftDict[key] = [s]
+        return [shiftDict[k] for k in shiftDict]
+
+# 785. Is Graph Bipartite?
+class Q785:
+    def isBipartite(self, graph: List[List[int]]) -> bool:
+        nodes = set()
+        from collections import deque
+        groupMap = [0]*len(graph)
+        for i in range(len(graph)):
+            # if len(graph[i]) == 0: return False
+            if i in nodes: continue
+            q = deque([i])
+            groupMap[i] = 1
+            while len(q) > 0:
+                node = q.pop()
+                if node in nodes:
+                    continue
+                else:
+                    nodes.add(node)
+                for neighbor in graph[node]:
+                    if groupMap[neighbor] > 0 and groupMap[neighbor] == groupMap[node]:
+                        return False
+                    else:
+                        groupMap[neighbor] = 3 - groupMap[node]
+                    q.appendleft(neighbor)
+        return True
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
