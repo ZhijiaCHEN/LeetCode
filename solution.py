@@ -2804,7 +2804,55 @@ class Q29:
                 return -q
 
 # 282. Expression Add Operators
+class Q282:
+    def addOperators(self, num: str, target: int) -> List[str]:
+        if len(num) == 0:
+            return []
+        ret = []
+        def backtrack(idx: int, s: int, multStack: List[int], plusStack: bool, op: str, expr: str):
+            thisChar = num[idx]
+            thisNum = int(thisChar)
 
+            if op is None:
+                if multStack[-1] == 0: return # avoid number that > 0 starting with 0
+                expr += thisChar
+                multStack[-1] = multStack[-1]*10 + thisNum
+            else:
+                expr += (op + thisChar)
+                if op == '*':
+                    multStack.append(thisNum)
+                else:
+                    if len(multStack) > 0:
+                        m = 1
+                        for n in multStack:
+                            m *= n
+                        if plusStack:
+                            s += m
+                        else:
+                            s -= m
+                    multStack = [thisNum]
+                    if op == '+':
+                        plusStack = True
+                    else:
+                        plusStack = False
+
+            if idx == len(num) - 1:
+                m = 1
+                for n in multStack:
+                    m *= n
+                if plusStack:
+                    s += m
+                else:
+                    s -= m
+                if s == target:
+                    ret.append(expr[1:])
+            else:
+                backtrack(idx+1, s, multStack.copy(), plusStack, None, expr)
+                backtrack(idx+1, s, multStack.copy(), plusStack, '+', expr)
+                backtrack(idx+1, s, multStack.copy(), plusStack, '-', expr)
+                backtrack(idx+1, s, multStack.copy(), plusStack, '*', expr)
+        backtrack(0, 0, [], True, '+', '')
+        return ret
 
 # 249. Group Shifted Strings
 class Q249:
@@ -2843,6 +2891,43 @@ class Q785:
                         groupMap[neighbor] = 3 - groupMap[node]
                     q.appendleft(neighbor)
         return True
+
+# 670. Maximum Swap
+class Q670:
+    def maximumSwap(self, num: int) -> int:
+        # 1. find the largest digit maxDigit and its index maxIdx, if multiple largest digits exit, use the right most one.
+        # 2. from let to right, find a digit x and its index xIdx such that:
+        #   a. x < maxDigit
+        #   b. xIdx < maxIdx
+        # 3. if not such (xIdx, x) is found, use the next largest digit and its index, go to 2
+        num = [n for n in str(num)]
+        maxIdx = {}
+        for i in range(len(num) - 1, -1, -1):
+            maxIdx.setdefault(num[i], i)
+        for d in range(9, -1, -1):
+            if d not in maxIdx: continue
+            for i in range(0, len(num)):
+                if num[i] < d and i < maxIdx[d]:
+                    num[i], num[maxIdx[d]] = num[maxIdx[d]], num[i]
+                    return int(''.join(num))
+
+# 1060. Missing Element in Sorted Array
+class Q1060:
+    def missingElement(self, nums: List[int], k: int) -> int:
+        if k <= 0: k = 1
+        p = 0
+        misNum = nums[0]
+        while k > 0 and p < len(nums):
+            if nums[p] <= misNum:
+                p += 1
+            else:
+                misNum += 1
+                if misNum != nums[p]:
+                    k -= 1
+        if k == 0:
+            return misNum
+        else:
+            return misNum + k
 
 if __name__ == '__main__':
     q = Q680()
