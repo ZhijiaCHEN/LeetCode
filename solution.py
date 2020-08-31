@@ -2929,6 +2929,42 @@ class Q1060:
         else:
             return misNum + k
 
+# 1026. Maximum Difference Between Node and Ancestor
+class Q1026:
+    def maxAncestorDiff(self, root: TreeNode) -> int:
+        if root is None:
+            return 0
+        ret = 0
+        def backtrack(minVal: int, maxVal: int, node: TreeNode):
+            nonlocal ret
+            minVal = min(node.val, minVal)
+            maxVal = max(node.val, maxVal)
+            ret = max(ret, maxVal - minVal)
+            if node.left:
+                backtrack(minVal, maxVal, node.left)
+            if node.right:
+                backtrack(minVal, maxVal, node.right)
+        backtrack(root.val, root.val, root)
+        return ret
+# 689. Maximum Sum of 3 Non-Overlapping Subarrays
+class Q689:
+    def maxSumOfThreeSubarrays(self, nums: List[int], k: int) -> List[int]:
+        # rank the sum of subarrays
+        # find the first three sub-arrays without overlay
+        ret = []
+        subArrSum = []
+        for i, x in enumerate(nums[:len(nums)-k+1]):
+            subArrSum.append((i, sum(nums[i:i+k])))
+        subArrSum.sort(reverse = True, key = lambda x: (x[1], -x[0]))
+        for i in range(len(subArrSum)-2):
+            for j in range(i+1, len(subArrSum)-1):
+                for l in range(j+1, len(sumArrSum)):
+                    if abs(subArrSum[i][0] - subArrSum[j][0]) >= k and abs(subArrSum[j][0] - subArrSum[l][0]) >= k and abs(subArrSum[l][0] - subArrSum[i][0]) >= k:
+                        return sorted([subArrSum[i][0], subArrSum[j][0], subArrSum[l][0]])
+        
+
+        for s in subArrSum
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
