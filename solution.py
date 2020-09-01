@@ -2946,25 +2946,52 @@ class Q1026:
                 backtrack(minVal, maxVal, node.right)
         backtrack(root.val, root.val, root)
         return ret
+
 # 689. Maximum Sum of 3 Non-Overlapping Subarrays
 class Q689:
     def maxSumOfThreeSubarrays(self, nums: List[int], k: int) -> List[int]:
-        # rank the sum of subarrays
-        # find the first three sub-arrays without overlay
-        ret = []
-        subArrSum = []
-        for i, x in enumerate(nums[:len(nums)-k+1]):
-            subArrSum.append((i, sum(nums[i:i+k])))
-        subArrSum.sort(reverse = True, key = lambda x: (x[1], -x[0]))
-        for i in range(len(subArrSum)-2):
-            for j in range(i+1, len(subArrSum)-1):
-                for l in range(j+1, len(sumArrSum)):
-                    if abs(subArrSum[i][0] - subArrSum[j][0]) >= k and abs(subArrSum[j][0] - subArrSum[l][0]) >= k and abs(subArrSum[l][0] - subArrSum[i][0]) >= k:
-                        return sorted([subArrSum[i][0], subArrSum[j][0], subArrSum[l][0]])
-        
+        s = sum(nums[:k])
+        l = len(nums)
+        subArrSum = [(0, s)]
+        for i in range(1, l-k+1):
+            s -= nums[i-1]
+            s += nums[i+k-1]
+            subArrSum.append((i, s))
+        sl = len(subArrSum)
+        #print(sl)
+        lMax = [subArrSum[0]]
+        for x in subArrSum[1:sl-2*k]:
+            if x[1] > lMax[-1][1]:
+                lMax.append(x)
+            else:
+                lMax.append(lMax[-1])
+        rMax = [subArrSum[-1]]
+        for x in subArrSum[-2:-(sl-2*k)-1:-1]:
+            if x[1] >= rMax[-1][1]:
+                rMax.append(x)
+            else:
+                rMax.append(rMax[-1])
+        #print(len(lMax), len(subArrSum[k: l-2*k+1]), len(rMax))
+        maxS = lMax[0][1] + subArrSum[k][1] + rMax[-1][1]
+        ret = [lMax[0][0], subArrSum[k][0], rMax[-1][0]]
+        for l, m, r in zip(lMax, subArrSum[k: l-2*k+1], rMax[::-1]):
+            if l[1] + m[1] + r[1] > maxS:
+                maxS = l[1] + m[1] + r[1]
+                ret = [l[0], m[0], r[0]]
+        return ret
 
-        for s in subArrSum
-
+# 339. Nested List Weight Sum
+class Q339:
+    def depthSum(self, nestedList: List[NestedInteger]) -> int:
+        def list_sum(nestedList: List[NestedInteger], depth: int):
+            s = 0
+            for n in nestedList:
+                if type(n) == int:
+                    s += depth*n
+                else:
+                    s += list_sum(n, depth + 1)
+            return s
+        return list_sum(nestedList, 1)
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
