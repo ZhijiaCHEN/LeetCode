@@ -1611,6 +1611,25 @@ class Q139:
             return canBreak
         return backtrack(s)
 
+# 140. Word Break II
+class Q140:
+    def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:
+        memo = {}
+        wordSet = set(wordDict)
+        def backtrack(subS: str):
+            if not subS:
+                return [[]]
+            if subS not in memo:
+                memo[subS] = []
+                for endIdx in range(1, len(subS)+1):
+                    word = subS[:endIdx]
+                    if word in wordSet:
+                        for wordList in backtrack(subS[endIdx:]):                           
+                            memo[subS].append([word] + wordList)
+            return memo[subS]
+        backtrack(s)
+        return [' '.join(wordList) for wordList in memo[s]]
+
 # 322. Coin Change
 class Q322:
     def coinChange(self, coins: List[int], amount: int) -> int:
@@ -2992,6 +3011,50 @@ class Q339:
                     s += list_sum(n, depth + 1)
             return s
         return list_sum(nestedList, 1)
+
+# 621. Task Scheduler
+class Q621:
+    def leastInterval(self, tasks: List[str], n: int) -> int:
+        freq = [0]*26
+        for x in tasks:
+            freq[ord(x)-ord('A')] += 1
+        freq.sort()
+        fMax = freq.pop()
+        idle = (fMax - 1)*n
+        for x in freq:
+            idle -= min(x, fMax - 1)
+        idle = max(0, idle)
+        return len(tasks) + idle
+
+# 398. Random Pick Index
+class Solution:
+    import random
+    def __init__(self, nums: List[int]):
+        idxDict = {}
+        for i, x in enumerate(nums):
+            if x in idxDict:
+                idxDict[x].append(i)
+            else:
+                idxDict[x] = [i]
+
+    def pick(self, target: int) -> int:
+        idces = self.idxDict[x]
+        return idces[random.randint(0, len(idces) - 1)]
+
+# 896. Monotonic Array
+class Q896:
+    def isMonotonic(self, A: List[int]) -> bool:
+        ret = True
+        if len(A) <= 2:
+            return True
+        increase = (A[-1] - A[0] > 0)
+        for x, y in zip(A, A[1:]):
+            if x == y: continue
+            if (y - x > 0) != increase:
+                return False
+        return True
+
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
