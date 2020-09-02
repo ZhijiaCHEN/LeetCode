@@ -3054,6 +3054,76 @@ class Q896:
                 return False
         return True
 
+# 394. Decode String
+class Q394:
+    def decodeString(self, s: str) -> str:
+        repStr = ['']
+        repNum = [1]
+        numSet = set([str(i) for i in range(10)])
+        numStr = ''
+        for x in s:
+            if x in numSet:
+                numStr += x
+            elif x == '[':
+                repStr.append('')
+                repNum.append(int(numStr))
+                numStr = ''
+            elif x == ']':
+                decode = repStr.pop()*repNum.pop()
+                repStr[-1] += decode
+            else:
+                repStr[-1] += x
+        return repStr[-1]
+
+# 767. Reorganize String
+class Q767:
+    def reorganizeString(self, S: str) -> str:
+        freq = [(0, chr(ord('a') + i)) for i in range(26)]
+        for x in S:
+            freq[ord(x) - ord('a')][0] += 1
+        freq.sort()
+        freqMax = freq.pop()
+        slotCnt = (freqMax[0] - 1)
+        slot = [[freqMax[1]] for _ in range(freqMax[0])]
+        slotItr = 0
+        for x in freq:
+            # slotCnt -= max(freqMax - 1, x[0])
+            slotCnt -= x[0]
+            while x[0] > 0:
+                slot[slotItr].append(x[1])
+                slotItr = ((slotItr + 1) % freqMax[0])
+                x[0] -= 1
+        if slotCnt > 0:
+            return ''
+        else:
+            return ''.join([''.join(x) for x in slot])
+
+# 843. Guess the Word
+# """
+# This is Master's API interface.
+# You should not implement it, or speculate about its implementation
+# """
+# class Master:
+#     def guess(self, word: str) -> int:
+class Q843:
+    def findSecretWord(self, wordlist: List[str], master: 'Master') -> None:
+        matchDict = {word:[set() for _ in range(5)] for word in wordlist}
+        for i in range(0, len(wordlist) - 1):
+            for j in range(i+1, len(wordlist)):
+                wi = wordlist[i]
+                wj = wordlist[j]
+                matchCnt = sum([1 if chari == charj else 0 for chari, charj in zip(wi, wj)])
+                matchDict[wi][matchCnt].add(wj)
+                matchDict[wj][matchCnt].add(wi)
+
+        guessSet = set(wordlist)
+        matchCnt = 0
+        while matchCnt != 6:
+            guess = guessSet.pop()
+            matchCnt = master.guess(guess)
+            if matchCnt == 6: return
+            guessSet = guessSet & guessDict[guess][guessCnt]
+
 
 if __name__ == '__main__':
     q = Q680()
