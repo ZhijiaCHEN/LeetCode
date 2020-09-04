@@ -3210,9 +3210,115 @@ class Q1048:
                     chainLen[word2] = l
         return ret
 
+# 1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit
+class Q1438:
+    def longestSubarray(self, nums: List[int], limit: int) -> int:
+        ret = 1
+        startIdx = 0
+        maxIdx = 0
+        minIdx = 0
+        for endIdx in range(1, len(nums)):
+            if nums[endIdx] > nums[maxIdx]:
+                maxIdx = endIdx
+                if nums[maxIdx] - nums[minIdx] > limit:
+                    ret = max(ret, endIdx - startIdx)
+                    while nums[maxIdx] - nums[minIdx] > limit:
+                        minIdx += 1
+                        startIdx = minIdx
+                        for i in range(minIdx, endIdx):
+                            if nums[i] <= nums[minIdx]:
+                                minIdx = i
 
+                    
+                    
+            if nums[endIdx] < nums[minIdx]:
+                minIdx = endIdx
+                if nums[maxIdx] - nums[minIdx] > limit:
+                    ret = max(ret, endIdx - startIdx)
+                    while nums[maxIdx] - nums[minIdx] > limit:
+                        maxIdx += 1
+                        startIdx = maxIdx
+                        for i in range(maxIdx, endIdx):
+                            if nums[i] >= nums[maxIdx]:
+                                maxIdx = i
 
+        ret = max(ret, endIdx - startIdx + 1)
+        return ret
 
+# 642. Design Search Autocomplete System
+class AutocompleteSystem:
+    import heapq
+    def __init__(self, sentences: List[str], times: List[int]):
+        # {char1: ({char2: ({...}, [[...], [...]])}, [sentence1 index, sentence2 index],...])}
+        self.sentences = sentences
+        self.times = times
+        self.trie = {}
+        self.idxDict = {}
+        for s in sentences:
+            self.idxDict[s] = len(self.idxDict)
+            self._trie_add_sentence(s)
+        self.inputHolder = []
+        self.nextNode = self.trie
+
+    def input(self, c: str) -> List[str]:
+        if c == '#':
+            self._end_sentence()
+            return []
+        self.inputHolder.append(c)
+        (self.nextNode, sIdx) = self.nextNode.get(c, [{}, []])
+        topIdx = heapq.nsmallest(3, sIdx, key = lambda i: (-self.times[i], self.sentences[i]))
+        topS = [self.sentences[i] for i in topIdx]
+        return topS
+    
+    def _trie_add_sentence(self, s):
+        node = self.trie
+        for char in s:
+            (node, sIdx) = node.setdefault(char, [{}, []])
+            sIdx.append(self.idxDict[s])
+
+    def _end_sentence(self):
+        self.nextNode = self.trie
+        if not self.inputHolder: return
+        s = ''.join(self.inputHolder)
+        self.inputHolder = []
+        if s not in self.idxDict:
+            self.sentences.append(s)
+            self.times.append(1)
+            self.idxDict[s] = len(self.idxDict)
+            self._trie_add_sentence(s)
+        else:
+            self.times[self.idxDict[s]] += 1
+
+# 57. Insert Interval
+class Q57:
+    def insert(self, intervals: List[List[int]], newInterval: List[int]) -> List[List[int]]:
+        if len(intervals) == 0:
+            return [newInterval]
+        insP = 0
+        for i in range(len(intervals)):
+            if newInterval[0] > intervals[i][1]: 
+                continue
+            elif newInterval[1] < intervals[i][0]:
+                intervals.insert(i, newInterval)
+            else:
+                intervals[i] = [min(newInterval[0], intervals[i][0]), max(newInterval[1], intervals[i][1])]
+            insP = i
+            break
+        if newInterval[0] > intervals[-1][1]:
+            insP = len(intervals)
+            intervals.append(newInterval)
+        mergIdx = insP
+        mergCnt = 0
+        for i in range(insP + 1, len(intervals)):
+            if intervals[i][0] <= intervals[insP][1]:
+                mergCnt += 1
+                intervals[insP][1] = max(intervals[insP][1], intervals[i][1])
+            else:
+                break
+        for _ in range(mergCnt):
+            del intervals[insP + 1]
+        return intervals
+        
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
