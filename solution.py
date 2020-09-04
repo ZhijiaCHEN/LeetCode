@@ -3124,6 +3124,94 @@ class Q843:
             if matchCnt == 6: return
             guessSet = guessSet & guessDict[guess][guessCnt]
 
+# 72. Edit Distance
+class Q72:
+    def minDistance(self, word1: str, word2: str) -> int:
+        l1 = len(word1)
+        l2 = len(word2)
+        if not l1 or not l2:
+            return l1 + l2
+    
+        dist = [[0]*(l2+1) for _ in range(l1+1)]
+        for i in range(l1 + 1):
+            dist[i][0] = i
+        for j in range(l2 + 1):
+            dist[0][j] = j
+        
+        for i in range(1, l1 + 1):
+            for j in range(1, l2 + 1):
+                if word1[i-1] == word2[j-1]:
+                    dist[i][j] = min(dist[i-1][j-1], dist[i-1][j] + 1, dist[i][j-1] + 1)
+                else:
+                    dist[i][j] = min(dist[i-1][j-1], dist[i-1][j], dist[i][j-1]) + 1
+        return dist[l1][l2]
+
+# 1197. Minimum Knight Moves
+class Q1197:
+    def minKnightMoves(self, x: int, y: int) -> int:
+        from collections import deque
+        x = abs(x)
+        y = abs(y)
+        if x < y:
+            x,y = y,x
+        DAll = [(2, 1, 1), (2, -1, 1), (-2, 1, 1), (-2, -1, 1), (1, 2, 1), (1, -2, 1), (-1, 2, 1), (-1, -2, 1)]
+        D = [(-2, -1, 1), (-1, -2, 1)]
+        path = deque([(x, y, 0)])
+        passed = set([(x, y, 0)])
+        while path:
+            p = path.pop()
+            if p[:2] == (0, 0): return p[2]
+            if p[0] >= 2 and p[1] >= 2:
+                direct = D
+            else:
+                direct = DAll
+            for d in direct:
+                (xi, yi, mi) = tuple(abs(i+j) for i,j in zip(p, d))
+                if xi < yi:
+                    xi,yi = yi,xi
+                nextP = (xi, yi, mi)
+                if nextP[:2] in passed:
+                    continue
+                else:
+                    passed.add(nextP[:2])
+                    path.appendleft(nextP)
+
+# 1048. Longest String Chain
+class Q1048:
+    def longestStrChain(self, words: List[str]) -> int:
+        words.sort(key = lambda x:len(x))
+        chainLen = {w:1 for w in words}
+        ret = 1
+        for i, word1 in enumerate(words):
+            for j in range(i+1, len(words)):
+                word2 = words[j]
+                if len(word2) == len(word1):
+                    continue
+                if len(word2) > len(word1) + 1:
+                    break
+                insert = False
+                match = True
+                idx1 = 0
+                idx2 = 0
+                while idx1 < len(word1):
+                    if word1[idx1] != word2[idx2]:
+                        if insert:
+                            match = False
+                            break
+                        else:
+                            insert = True
+                            idx2 += 1
+                            continue
+                    idx1 += 1
+                    idx2 += 1
+                if match:
+                    l = max(chainLen[word2], chainLen[word1] + 1)
+                    ret = max(ret, l)
+                    chainLen[word2] = l
+        return ret
+
+
+
 
 if __name__ == '__main__':
     q = Q680()
