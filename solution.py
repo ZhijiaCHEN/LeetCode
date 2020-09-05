@@ -3318,7 +3318,105 @@ class Q57:
         for _ in range(mergCnt):
             del intervals[insP + 1]
         return intervals
+
+# 722. Remove Comments
+class Q722:
+    def removeComments(self, source: List[str]) -> List[str]:
+        ret = []
+        ln = 0
+        while ln < len(source):
+            line = source[ln]
+            for cn in range(len(line) -1):
+                if line[cn: cn+2] == '//':
+                    line = line[:cn]
+                    break
+                elif line[cn: cn+2] == '/*':
+                    # check if the block comment ends in the same line
+                    blockEnd = False
+                    for cn2 in range(cn+2, len(line)-1):
+                        if line[cn2: cn2+2] == '*/':
+                            blockEnd = True
+                            break
+                    if blockEnd:
+                        line = line[:cn] + line[cn2+2:]
+                    else:
+                        # keep skiping lines until */ is found
+                        while not blockEnd and ln < len(source) - 1:
+                            ln += 1
+                            newLine = source[ln]
+                            for cn2 in range(len(newLine) -1):
+                                if newLine[cn2: cn2+2] == '*/':
+                                    line = line[:cn] + newLine[cn2+2:]
+                                    blockEnd = True
+                                    break
+                    # // may appear after the line where a block comment ends
+                    source[ln] = line
+                    ln -= 1
+                    line = ""
+                    break
+                else:
+                    continue
+            if len(line) > 0:
+                ret.append(line)
+            ln += 1
+        return ret
+
+# 399. Evaluate Division
+class Q399:
+    def calcEquation(self, equations: List[List[str]], values: List[float], queries: List[List[str]]) -> List[float]:
+        from collections import deque
+        divGraph = {}
+        for [x, y], v in zip (equations, values):
+            divGraph.setdefault(x, {})[y] = v
+            if v != 0:
+                divGraph.setdefault(y, {})[x] = 1/v
         
+        ret = []
+        for [dividend, divisor] in queries:
+            if dividend not in divGraph:
+                ret.append(-1)
+                continue
+            quotient = -1
+            q = deque([(dividend, 1)])
+            path = set([dividend])
+            while q:
+                (x, v) = q.pop()
+                if x == divisor:
+                    quotient = v
+                    break
+                for y, vv in divGraph[x].items():
+                    if y in path:
+                        continue
+                    path.add(y)
+                    q.appendleft((y, v*vv))
+            ret.append(quotient)
+        
+        return ret
+
+# 1031. Maximum Sum of Two Non-Overlapping Subarrays
+class Q1031:
+    def maxSumTwoNoOverlap(self, A: List[int], L: int, M: int) -> int:
+        Lsum = [(sum(A[:L]), 0)]
+        Msum = [(sum(A[:M]), 0)]
+        for i in range(1, len(A) - L + 1):
+            Lsum.append((Lsum[-1][0] - A[i-1] + A[i+L-1], i))
+        for i in range(1, len(A) - M + 1):
+            Msum.append((Msum[-1][0] - A[i-1] + A[i+M-1], i))
+        Lsum.sort(reverse=True)
+        Msum.sort(reverse=True)
+        ret = sum(A[:L+M])
+        for li in range(len(Lsum)):
+            breakFlag = True
+            for mi in range(len(Msum)):
+                if (Lsum[li][1] <= Msum[mi][1] and Lsum[li][1] + L > Msum[mi][1]) or (Msum[mi][1] <= Lsum[li][1] and Msum[mi][1] + M > Lsum[li][1]):
+                    breakFlag = False
+                    continue
+                ret = max(ret, Lsum[li][0] + Msum[mi][0])
+                break
+            if breakFlag:
+                break
+        return ret
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
