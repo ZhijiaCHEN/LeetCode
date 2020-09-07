@@ -3417,6 +3417,80 @@ class Q1031:
                 break
         return ret
 
+# 727. Minimum Window Subsequence
+class Q727:
+    def minWindow(self, S: str, T: str) -> str:
+        # for any i in range(len(T)), T[:i] is a subsquence of S[curCandWinStart[endIdx]: endIdx + 1] if curCandWinStart[endIdx] is not None
+        curCandWinStart = [i if s == T[0] else None for i, s in enumerate(S)]
+
+        for t in T[1:]:
+            nextCandWinStart = [None] * len(S)
+            last = None
+            for i, (s, startIdx) in enumerate(zip(S, curCandWinStart)):
+                if last is not None and t == s:
+                    nextCandWinStart[i] = last
+                if startIdx is not None:
+                    last = startIdx
+            curCandWinStart = nextCandWinStart
+        
+        startIdx, endIdx = 0, len(S)
+        for e, s in enumerate(curCandWinStart):
+            if s is not None and e - s < endIdx - startIdx:
+                startIdx = s
+                endIdx = e
+        if endIdx - startIdx < len(S):
+            return S[startIdx: endIdx + 1]
+        else:
+            return ""
+
+# 946. Validate Stack Sequences
+class Q946:
+    def validateStackSequences(self, pushed: List[int], popped: List[int]) -> bool:
+        stack = []
+        pushIdx = 0
+        popIdx = 0
+        while pushIdx < len(pushed):
+            stack.append(pushed[pushIdx])
+            while len(stack) > 0 and stack[-1] == popped[popIdx]:
+                stack.pop()
+                popIdx += 1
+            pushedIdx += 1
+        while popIdx < len(popped):
+            if len(stack) == 0 or stack.pop() != popped[popIdx]:
+                return False
+            else:
+                popIdx += 1
+        if len(stack) > 0:
+            return False
+        else:
+            return True
+
+# 359. Logger Rate Limiter
+class Logger:
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.logLastTime = {}
+
+    def shouldPrintMessage(self, timestamp: int, message: str) -> bool:
+        """
+        Returns true if the message should be printed in the given timestamp, otherwise returns false.
+        If this method returns false, the message will not be printed.
+        The timestamp is in seconds granularity.
+        """
+
+        if message not in self.logLastTime or timestamp - self.logLastTime[message] >= 10:
+            self.logLastTime[message] = timestamp
+            return True
+        else:
+            return False
+
+
+
+
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
