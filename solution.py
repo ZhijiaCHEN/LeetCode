@@ -3487,9 +3487,101 @@ class Logger:
         else:
             return False
 
+# 1153. String Transforms Into Another String
+class Q1153:
+    def canConvert(self, str1: str, str2: str) -> bool:
+        if str1 == str2: return True
+        convert = {}
+        for x, y in zip(str1, str2):
+            if convert.setdefault(x, y) != y:
+                return False
+        return len(set([s for s in str2])) < 26
+    
+# 659. Split Array into Consecutive Subsequences
+class Q659:
+    def isPossible(self, nums: List[int]) -> bool:
+        from collections import deque
+        stack = deque([[nums[0], nums[0]]])
+        stackItr = -1
+        prev = nums[0]
+        for i in range(1, len(nums)):
+            if nums[i] - prev == 0:
+                if stackItr == -1:
+                    stack.append([prev, prev])
+                else:
+                    stack[stackItr][1] = prev
+                    stackItr -= 1 
+            elif nums[i] - prev == 1:
 
+                while stack[0][1] != prev:
+                    s = stack.popleft()
+                    if s[1] - s[0] < 2: return False
 
+                stack[-1][1] += 1
+                stackItr = len(stack) - 2
+                prev = nums[i]
+            else:
+                for s in stack:
+                    if s[1] - s[0] < 2: return False
+                    
+                stack = deque([[nums[i], nums[i]]])
+                stackItr = -1
+                prev = nums[i]
 
+        while stack:
+            s = stack.popleft()
+            if s[1] - s[0] < 2: return False
+        return True
+
+# 809. Expressive Words
+class Solution:
+    def expressiveWords(self, S: str, words: List[str]) -> int:
+        if S == "":
+            return(sum([w for w in words if w == ""]))
+        ret = 0
+        s = S
+        for w in words:
+            if w[0] != s[0]: continue
+            wIdx = 0
+            sIdx = 0
+            prev = w[0]
+            matchCnt = 0
+            stretch = False
+            match = True
+            while wIdx < len(w):
+                if sIdx >= len(s):
+                    match = False
+                    break
+                if w[wIdx] == s[sIdx]:
+                    if w[wIdx] == prev:
+                        matchCnt += 1
+                    else:
+                        if stretch and matchCnt < 3:
+                            match = False
+                            break
+                        stretch = False
+                        matchCnt = 1
+                        prev = w[wIdx]
+                    wIdx += 1
+                    sIdx += 1
+                else:
+                    if s[sIdx] == prev:
+                        matchCnt += 1
+                        sIdx += 1
+                        stretch = True
+                    else:
+                        match = False
+                        break
+            while match and sIdx < len(s):
+                if s[sIdx] != prev:
+                    match = False
+                    break
+                stretch = True
+                matchCnt += 1
+                sIdx += 1
+            if match and (not stretch or matchCnt >= 3):
+                ret += 1
+        return ret
 
 if __name__ == '__main__':
     q = Q680()
