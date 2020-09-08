@@ -3534,7 +3534,7 @@ class Q659:
         return True
 
 # 809. Expressive Words
-class Solution:
+class Q809:
     def expressiveWords(self, S: str, words: List[str]) -> int:
         if S == "":
             return(sum([w for w in words if w == ""]))
