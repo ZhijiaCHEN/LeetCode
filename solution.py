@@ -3583,6 +3583,91 @@ class Q809:
                 ret += 1
         return ret
 
+# 1293. Shortest Path in a Grid with Obstacles Elimination
+class Q1293:
+    def shortestPath(self, grid: List[List[int]], k: int) -> int:
+        from collections import deque
+        R = len(grid)
+        C = len(grid[0])
+        dp = [[-1 for c in range(C)] for r in range(R)]
+        dp[0][0] = k
+        D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        q = deque([(0, 0, 0, k)])
+        while q:
+            (r, c, l, k) = q.pop()
+            if (r, c) == (R-1, C-1):
+                return l
+            for d in D:
+                rr = r + d[0]
+                cc = c + d[1]
+                if 0 <= rr < R and 0 <= cc < C:
+                    if grid[rr][cc] == 1:
+                        if k > 0 and k > dp[rr][cc]:
+                            dp[rr][cc] = k
+                            q.appendleft((rr, cc, l + 1, k - 1))
+                        else:
+                            continue
+                    else:
+                        if k > dp[rr][cc]:
+                            dp[rr][cc] = k
+                            q.appendleft((rr, cc, l + 1, k))
+                        else:
+                            continue
+        return -1
+
+# 1231. Divide Chocolate
+class Q1231:
+    def maximizeSweetness(self, sweetness: List[int], K: int) -> int:
+        def divide(target):
+            s, cnt = 0, 0
+            for x in sweetness:
+                s += x
+                if s >= target:
+                    cnt += 1
+                    s = 0
+            return cnt
+        
+        lo, hi = min(sweetness), sum(sweetness)//(K+1)
+        while lo < hi:
+            target = (lo + hi +1)//2
+            if target == hi:
+                break
+            if divide(target) < K+1:
+                hi = target
+            else:
+                lo = target
+        if divide(target) < K+1:
+            return lo
+        else:
+            return hi
+# 1368. Minimum Cost to Make at Least One Valid Path in a Grid
+class Q1368:
+    def minCost(self, grid: List[List[int]]) -> int:
+        from collections import deque
+        R = len(grid)
+        C = len(grid[0])
+        dp = [[R*C for c in range(C)] for r in range(R)]
+        dp[0][0] = 0
+        q = deque([(0, 0, 0)])
+        D = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        dir = {1:(0, 1), 2:(0, -1), 3:(1, 0), 4:(-1, 0)}
+        while q:
+            (r, c, cost) = q.pop()
+            for d in D:
+                rr = r + d[0]
+                cc = c + d[1]
+                
+                if 0 <= rr < R and 0 <= cc < C:
+                    newCost = cost
+                    if dir[grid[r][c]] != d:
+                         newCost += 1
+                    
+                    if newCost < dp[rr][cc]:
+                        dp[rr][cc] = newCost
+                        q.appendleft((rr, cc, newCost))
+        print(dp)
+        return dp[R-1][C-1]
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
