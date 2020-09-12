@@ -3640,6 +3640,7 @@ class Q1231:
             return lo
         else:
             return hi
+
 # 1368. Minimum Cost to Make at Least One Valid Path in a Grid
 class Q1368:
     def minCost(self, grid: List[List[int]]) -> int:
@@ -3667,6 +3668,187 @@ class Q1368:
                         q.appendleft((rr, cc, newCost))
         print(dp)
         return dp[R-1][C-1]
+
+# 211. Design Add and Search Words Data Structure
+class WordDictionary:
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.trie = {}
+
+    def addWord(self, word: str) -> None:
+        """
+        Adds a word into the data structure.
+        """
+        node = self.trie
+        for char in word:
+            node = node.setdefault(char, {})
+        node['$'] = {}
+
+    def search(self, word: str) -> bool:
+        """
+        Returns if the word is in the data structure. A word could contain the dot character '.' to represent any one letter.
+        """
+        def match(charIdx, parentNode):
+            char = word[charIdx]
+            if char == '.':
+                for char in parentNode:
+                    node = parentNode[char]
+                    if charIdx == len(word) - 1:
+                        if '$' in node:
+                            return True
+                    else:
+                        if match(charIdx + 1, node):
+                            return True
+            else:
+                if char in parentNode:
+                    node = parentNode[char]
+                    if charIdx == len(word) - 1:
+                        if '$' in node:
+                            return True
+                    else:
+                        return match(charIdx + 1, node)
+            return False
+        return match(0, self.trie)
+
+# 125. Valid Palindrome
+class Q125:
+    def isPalindrome(self, s: str) -> bool:
+        lIdx = 0
+        rIdx = len(s) - 1
+        validChar = set([chr(x+ord('a')) for x in range(26)]) | set([str(n) for n in range(10)])
+        while lIdx < rIdx:
+            lChar = s[lIdx].lower()
+            rChar = s[rIdx].lower()
+            if lChar not in validChar:
+                lIdx += 1
+                continue
+            if rChar not in validChar:
+                rIdx -= 1
+                continue
+            if lChar != rChar:
+                return False
+            lIdx += 1
+            rIdx -= 1
+        return True
+
+# 270. Closest Binary Search Tree Value
+class Q270:
+    def closestValue(self, root: TreeNode, target: float) -> int:
+        ret = root.val
+        node = root
+        while node:
+            if abs(node.val - target) < abs(ret - target):
+                ret = node.val
+            if target > node.val:
+                if node.right:
+                    node = node.right
+                else:
+                    break
+            elif target < node.val:
+                if node.left:
+                    node = node.left
+                else:
+                    break
+            else:
+                break
+        if abs(node.val - target) < abs(ret - target):
+                ret = node.val
+        return ret
+        
+# 958. Check Completeness of a Binary Tree
+class Q958:
+    def isCompleteTree(self, root: TreeNode) -> bool:
+        from collections import deque
+        if not root: return True
+        q = deque([root])
+        while q:
+            endFlag = False
+            for _ in range(len(q)):
+                node = q.pop()
+                if node:
+                    if endFlag:
+                        return False
+                    else:
+                        q.appendleft(node.left)
+                        q.appendleft(node.right)
+                else:
+                    endFlag = True
+            if endFlag:
+                for node in q:
+                    if node: return False
+                return True
+        return True
+
+# 426. Convert Binary Search Tree to Sorted Doubly Linked List
+class Q426:
+    def treeToDoublyList(self, root: 'Node') -> 'Node':
+        if root is None: return None
+        lEnd = root
+        while lEnd.left:
+            lEnd = lEnd.left
+        rEnd = root
+        while rEnd.right:
+            rEnd = rEnd.right
+        def dfs(node, pred, succ):
+            if node.left:
+                dfs(node.left, pred, node)
+            else:
+                if node != pred:
+                    node.left = pred
+                    pred.right = node
+            if node.right:
+                dfs(node.right, node, succ)
+            else:
+                if node != succ:
+                    node.right = succ
+                    succ.left = node
+        dfs(root, lEnd, rEnd)
+        lEnd.left = rEnd
+        rEnd.right = lEnd
+        return lEnd
+
+# 317. Shortest Distance from All Buildings
+class Q317:
+    def shortestDistance(self, grid: List[List[int]]) -> int:
+        from collections import deque
+        R = len(grid)
+        C = len(grid[0])
+        BDG = []
+        for r in range(R):
+            for c in range(C):
+                if grid[r][c] == 1:
+                    BDG.append((r, c))
+        COST = [[[-1 for c in range(C)] for r in range(R)] for bdg in BDG]
+        D = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        
+        for bdg, cost in zip(BDG, COST):
+            q = deque([bdg + (0,)])
+            while q:
+                (r, c, l) = q.popleft()
+                for d in D:
+                    rr = r + d[0]
+                    cc = c + d[1]
+                    if 0 <= rr < R and 0 <= cc < C and grid[rr][cc] == 0 and cost[rr][cc] < 0:
+                        cost[rr][cc] = l + 1
+                        q.append((rr, cc, l + 1))
+        ret = -1
+        for r in range(R):
+            for c in range(C):
+                valid = True
+                for cost in COST:
+                    if cost[r][c] < 0:
+                        valid = False
+                if not valid: continue
+                cost = sum([cost[r][c] for cost in COST])
+                if ret < 0 or cost < ret:
+                    ret = cost
+        return ret
+
+
+
 
 if __name__ == '__main__':
     q = Q680()
