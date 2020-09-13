@@ -3847,8 +3847,184 @@ class Q317:
                     ret = cost
         return ret
 
+# 825. Friends Of Appropriate Ages
+class Q825:
+    def numFriendRequests(self, ages: List[int]) -> int:
+        ages.sort(reverse = True)
+        from collections import deque
+        minAge = deque([]) # (A index, minimum friend request age)
+        ret = 0
+        for bIdx, b in enumerate(ages):
+            while minAge and minAge[0][1]*0.5 + 7 >= b:
+                aIdx, a = minAge.popleft()
+                ret += (bIdx - aIdx - 1)
+            minAge.append((bIdx, b))
 
+        if len(minAge) > 0:
+            bIdx, b = minAge.pop()
+            while minAge:
+                aIdx, a = minAge.popleft()
+                ret += (bIdx - aIdx)
+        print(ret)
+        # check people of the same age
+        i = 0
+        while i < len(ages):
+            if ages[i] > 14:
+                k = 0
+                a = ages[i]
+                i += 1
+                while i < len(ages) and ages[i] == a:
+                    k += 1
+                    i += 1
+                ret += int(k*(k+1)/2)
+            else:
+                i += 1
+        return ret
 
+# 432. All O`one Data Structure
+class AllOne:
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.key2val = {}
+        self.val2key = {}
+        self.minVal = None
+        self.maxVal = None
+
+    def inc(self, key: str) -> None:
+        """
+        Inserts a new key <Key> with value 1. Or increments an existing key by 1.
+        """
+        val = self.key2val.get(key, 0)
+        if val != 0:
+            self.val2key[val].remove(key)
+            if len(self.val2key[val]) == 0:
+                self.val2key.pop(val)
+                if self.minVal == val:
+                    self.minVal = val + 1
+        val += 1
+        self.key2val[key] = val
+        self.val2key.setdefault(val, set()).add(key)
+        if self.maxVal is None or self.maxVal < val:
+            self.maxVal = val
+        if self.minVal is None or self.minVal > val:
+            self.minVal = val
+
+    def dec(self, key: str) -> None:
+        """
+        Decrements an existing key by 1. If Key's value is 1, remove it from the data structure.
+        """
+        val = self.key2val.get(key, 0)
+        if val == 0: return
+        if val == 1:
+            self.key2val.pop(key)
+        else:
+            self.key2val[key] = val - 1
+            self.val2key.setdefault(val - 1, set()).add(key)
+        self.val2key[val].remove(key)
+        if len(self.val2key[val]) == 0:
+            self.val2key.pop(val)
+            if val == self.maxVal or val == self.minVal:
+                if len(self.val2key) > 0:
+                    vals = list(self.val2key.keys())
+                    self.maxVal = max(vals)
+                    self.minVal = min(vals)
+                else:
+                    self.maxVal = None
+                    self.minVal = None
+
+    def getMaxKey(self) -> str:
+        """
+        Returns one of the keys with maximal value.
+        """
+        if self.maxVal:
+            return next(iter(self.val2key[self.maxVal]))
+        else:
+            return ""
+
+    def getMinKey(self) -> str:
+        """
+        Returns one of the keys with Minimal value.
+        """
+        if self.minVal:
+            return next(iter(self.val2key[self.minVal]))
+        else:
+            return ""
+
+# 1123. Lowest Common Ancestor of Deepest Leaves
+class Q1123:
+    def lcaDeepestLeaves(self, root: TreeNode) -> TreeNode:
+        deepest = []
+        def dfs(path):
+            nonlocal deepest
+            node = path[-1]
+            if node.left is None and node.right is None:
+                if len(deepest) == 0 or len(deepest[0]) == len(path):
+                    deepest.append(path)
+                elif len(deepest[0]) < len(path):
+                    deepest = [path]
+            else:
+                if node.left:
+                    dfs(path + [node.left])
+                if node.right:
+                    dfs(path + [node.right])
+        dfs([root])
+        path0 = deepest[0]
+        for i in range(len(path0)-1, -1, -1):
+            match = True
+            for pathi in deepest[1:]:
+                if pathi[i] != path0[i]:
+                    match = False
+                    break
+            if match:
+                return path0[i]
+
+# 766. Toeplitz Matrix
+class Q766:
+    def isToeplitzMatrix(self, matrix: List[List[int]]) -> bool:
+        prevRow = matrix[0]
+        for thisRow in matrix[1:]:
+            for x, y in zip(prevRow, thisRow[1:]):
+                if x != y:
+                    return False
+            prevRow = thisRow
+        return True
+
+# 463. Island Perimeter
+class Q463:
+    def islandPerimeter(self, grid: List[List[int]]) -> int:
+        R = len(grid)
+        C = len(grid[0])
+        D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        ret = 0
+        for r in range(R):
+            for c in range(C):
+                if grid[r][c] == 1:
+                    ret += 4
+                    for d in D:
+                        rr = r + d[0]
+                        cc = c + d[1]
+                        if 0 <= rr < R and 0 <= cc < C and grid[rr][cc] == 1:
+                            ret -= 1
+        return ret
+
+# 839. Similar String Groups
+class Q839:
+    def numSimilarGroups(self, A: List[str]) -> int:
+        group = [set([i]) for i in range(len(A))]
+        for i in range(len(A)):
+            wi = A[i]
+            groupi = group[i]
+            for j in range(i + 1, len(A)):
+                if j in groupi: continue
+                wj = A[j]
+                diffCnt = sum([1 if chari != charj else 0 for chari, charj in zip(wi, wj)])
+                if diffCnt <= 2:
+                    groupi |= group[j]
+                    group[j] = groupi
+        return len(set([id(g) for g in group]))
 
 if __name__ == '__main__':
     q = Q680()
