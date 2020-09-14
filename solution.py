@@ -4013,18 +4013,103 @@ class Q463:
 # 839. Similar String Groups
 class Q839:
     def numSimilarGroups(self, A: List[str]) -> int:
-        group = [set([i]) for i in range(len(A))]
-        for i in range(len(A)):
-            wi = A[i]
-            groupi = group[i]
-            for j in range(i + 1, len(A)):
-                if j in groupi: continue
-                wj = A[j]
-                diffCnt = sum([1 if chari != charj else 0 for chari, charj in zip(wi, wj)])
-                if diffCnt <= 2:
-                    groupi |= group[j]
-                    group[j] = groupi
-        return len(set([id(g) for g in group]))
+        from itertools import combinations
+        parent = {w:w for w in A}
+
+        def similar(w1, w2):
+            return sum([1 if char1 != char2 else 0 for char1, char2 in zip(w1, w2)]) <= 2
+        
+        def find(w):
+            while parent[w] != w:
+                # this step is for optmization, the parent of each word will be the root word of the group
+                parent[w] = parent[parent[w]]
+
+                w = parent[w]
+            return w
+        
+        K = len(A[0])
+        A = set(A)
+        N = len(A)
+        res = N
+        if K > N:
+            for w1, w2 in combinations(A, 2):
+                if similar(w1, w2):
+                    pw1 = find(w1)
+                    pw2 = find(w2)
+                    if pw1 != pw2:
+                        parent[pw2] = pw1
+                        res -= 1
+        else:
+            for w1 in A:
+                pw1 = find(w1)
+                for i, j in combinations(range(K), 2):
+                    w2 = w1[:i] + w1[j] + w1[i+1:j] + w1[i] + w1[j+1:]
+                    if w2 not in A: continue
+                    if similar(w1, w2):
+                        pw2 = find(w2)
+                        if pw1 != pw2:
+                            parent[pw2] = pw1
+                            res -= 1
+        return res
+
+# 708. Insert into a Sorted Circular Linked List
+class Q708:
+    def insert(self, head: 'Node', insertVal: int) -> 'Node':
+        newNode = Node(insertVal)
+        if head is None:
+            newNode.next = newNode
+            return newNode
+        if head.next == head:
+            newNode.next = head
+            head.next = newNode
+            return head
+
+        prevNode = head
+        thisNode = head.next
+        start = prevNode
+        end = thisNode
+        while 1:
+            if thisNode.val < prevNode.val:
+                start = thisNode
+                end = prevNode
+            if prevNode.val <= newNode.val <= thisNode.val:
+                prevNode.next = newNode
+                newNode.next = thisNode
+                return head
+            prevNode = thisNode
+            thisNode = thisNode.next
+            if prevNode == head:
+                break
+        end.next = newNode
+        newNode.next = start
+        return head
+
+# 109. Convert Sorted List to Binary Search Tree
+class Q109:
+    def sortedListToBST(self, head: ListNode) -> TreeNode:
+        if head is None:
+            return None
+        nums = [head.val]
+        node = head
+        while node.next:
+            node = node.next
+            nums.append(node.val)
+    
+        def list2bst(nums):
+            if len(nums) == 1:
+                return TreeNode(val = nums[0])
+            if len(nums) == 2:
+                root = TreeNode(val = nums[1])
+                root.left = TreeNode(val = nums[0])
+                return root
+            rIdx = int(len(nums)/2)
+            root = TreeNode(val = nums[rIdx])
+            root.left = list2bst(nums[:rIdx])
+            root.right = list2bst(nums[rIdx+1:])
+            return root
+        return list2bst(nums)
+            
+
 
 if __name__ == '__main__':
     q = Q680()
