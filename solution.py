@@ -4109,7 +4109,111 @@ class Q109:
             return root
         return list2bst(nums)
             
+# 934. Shortest Bridge
+class Q934:
+    def shortestBridge(self, A: List[List[int]]) -> int:
+        from collections import deque
+        R = len(A)
+        C = len(A[0])
+        D = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        
+        # find an island
+        root = None
+        for r in range(R):
+            find = False
+            for c in range(C):
+                if A[r][c] == 1:
+                    A[r][c] = 2
+                    root = (r, c)
+                    find = True
+                    break
+            if find:
+                break
+        
+        # get the edges of the island
+        edge = set()
+        q = deque([root])
+        while q:
+            r, c = q.pop()
+            for d in D:
+                rr, cc = r + d[0], c + d[1]
+                if 0 <= rr < R and 0 <= cc < C:
+                    if A[rr][cc] == 1:
+                        A[rr][cc] = 2
+                        q.appendleft((rr, cc))
+                    elif A[rr][cc] == 0:
+                        edge.add((r, c))
+        
+        edge = deque(edge)
+        dist = 0
+        while edge:
+            dist += 1
+            for _ in range(len(edge)):
+                r, c = edge.pop()
+                for d in D:
+                    rr, cc = r + d[0], c + d[1]
+                    if 0 <= rr < R and 0 <= cc < C:
+                        if A[rr][cc] == 1:
+                            return dist - 1
+                        elif A[rr][cc] == 0:
+                            A[rr][cc] = 2
+                            edge.appendleft((rr, cc))
 
+        return -1
+
+# 378. Kth Smallest Element in a Sorted Matrix
+class Q378:
+    def kthSmallest(self, matrix: List[List[int]], k: int) -> int:
+        import heapq
+        N = len(matrix)
+        ptr = [(matrix[r][0], r, 0) for r in range(N)]
+        heapq.heapify(ptr)
+        cnt = 0
+        ret = matrix[0][0]
+        while cnt < k:
+            ret, r, c = heapq.heappop(ptr)
+            cnt += 1
+            c += 1
+            if c < N:
+                heapq.heappush(ptr, (matrix[r][c], r, c))
+        return ret
+
+# 616. Add Bold Tag in String
+class Q616:
+    def addBoldTag(self, s: str, dict: List[str]) -> str:
+        charIdx = {}
+        for i, char in enumerate(s):
+            charIdx.setdefault(char, []).append(i)
+        
+        boldRange = []
+        for subs in dict:
+            if len(subs) == 0 or subs[0] not in charIdx: continue
+            for sIdx in charIdx[subs[0]]:
+                eIdx = sIdx+len(subs)
+                if s[sIdx:eIdx] == subs:
+                    boldRange.append([sIdx, eIdx])
+        
+        if len(boldRange) == 0:
+            return s
+        boldRange.sort()
+
+        mergeRange = []
+        r1 = boldRange[0]
+        for r2 in boldRange[1:]:
+            if r2[0] <= r1[1]:
+                r1[1] = max(r2[1], r1[1])
+            else:
+                mergeRange.append(r1)
+                r1 = r2
+        mergeRange.append(r1)
+        
+        ret = s[:mergeRange[0][0]]
+        for r1, r2 in zip(mergeRange, mergeRange[1:]):
+            ret += '<b>'+s[r1[0]:r1[1]]+'</b>'+s[r1[1]:r2[0]]
+        
+        r1 = mergeRange[-1]
+        ret += '<b>'+s[r1[0]:r1[1]]+'</b>'+s[r1[1]:]
+        return ret
 
 if __name__ == '__main__':
     q = Q680()
