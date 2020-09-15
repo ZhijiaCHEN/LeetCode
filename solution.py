@@ -4215,6 +4215,72 @@ class Q616:
         ret += '<b>'+s[r1[0]:r1[1]]+'</b>'+s[r1[1]:]
         return ret
 
+# 658. Find K Closest Elements
+class Q658:
+    def findClosestElements(self, arr: List[int], k: int, x: int) -> List[int]:
+        if len(arr) <= k:  return arr
+        lptr, rptr = 0, k-1
+        while rptr + 1 < len(arr) and ((abs(x - arr[lptr]) > abs(arr[rptr+1] - x)) or (arr[rptr+1] <= x)):
+            lptr += 1
+            rptr += 1
+        return arr[lptr:rptr+1]
+
+# 347. Top K Frequent Elements
+class Q347
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        histo = {}
+        for n in nums:
+            histo[n] = histo.get(n, 0) + 1
+        ret = list(histo.items())
+        ret.sort(key=lambda x:x[1], reverse = True)
+        return [x[0] for x in ret[:k]]
+
+# 827. Making A Large Island
+class Q823
+    def largestIsland(self, grid: List[List[int]]) -> int:
+        from collections import deque
+        
+        R = len(grid)
+        C = len(grid[0])
+        D = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        islIdx = -1
+        islArea = [] #
+        for r in range(R):
+            for c in range(C):
+                if grid[r][c] != 1: continue
+                grid[r][c] = islIdx
+                q = deque([(r, c)]) # row, column
+                area = 1
+                while q:
+                    x, y = q.pop()
+                    for d in D:
+                        xx, yy = x+d[0], y+d[1]
+                        if 0 <= xx < R and 0 <= yy < C and grid[xx][yy] == 1:
+                            grid[xx][yy] = islIdx
+                            area += 1
+                            q.appendleft((xx, yy))
+                islArea.append(area)
+                islIdx -= 1
+        if len(islArea) == 1:
+            return min(R*C, islArea[0] + 1)
+        print(grid)
+        maxArea = 1
+        # group = set()
+        for x in range(R):
+            for y in range(C):
+                if grid[x][y] != 0: continue
+                area = 1
+                isls = set()
+                for d in D:
+                    xx, yy = x+d[0], y+d[1]
+                    if 0 <= xx < R and 0 <= yy < C and grid[xx][yy] != 0:
+                        islIdx = abs(grid[xx][yy]+1)
+                        if islIdx not in isls:
+                            area += islArea[islIdx]
+                            isls.add(islIdx)
+                maxArea = max(maxArea, area)
+        
+        return maxArea
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
