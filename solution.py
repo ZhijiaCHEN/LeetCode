@@ -4281,6 +4281,101 @@ class Q823
                 maxArea = max(maxArea, area)
         
         return maxArea
+
+
+
+from queue import Queue
+import threading
+# 1242. Web Crawler Multithreaded
+# """
+# This is HtmlParser's API interface.
+# You should not implement it, or speculate about its implementation
+# """
+#class HtmlParser(object):
+#    def getUrls(self, url):
+#        """
+#        :type url: str
+#        :rtype List[str]
+#        """
+
+class Q1242:
+    def crawl(self, startUrl: str, htmlParser: 'HtmlParser') -> List[str]:
+        q = Queue()
+        q.put(startUrl)
+        ret = set([startUrl])
+        host = startUrl[7:].split('/')[0]
+        tCnt = 0
+        lock = threading.Lock()
+        workNum = 10
+        def valid_host(url):
+            return (len(url) > 7) and (url[7:].split('/')[0] == host)
+        
+        def get_url(url):
+            nonlocal lock, tCnt
+            newURL = htmlParser.getUrls(url)
+            for x in newURL:
+                if x in ret: continue
+                if valid_host(x):
+                    q.put(x)
+                    ret.add(x)
+            lock.acquire()
+            tCnt -= 1
+            lock.release()
+
+        
+        while 1:
+            try:
+                nextUrl = q.get(block=True, timeout=0.02)
+                while 1:
+                    lock.acquire()
+                    if tCnt >= workNum:
+                        lock.release()
+                        time.sleep(0.015)
+                    else:
+                        tCnt += 1
+                        lock.release()
+                        break
+                t = threading.Thread(target=get_url, args=(nextUrl,))
+                t.start()
+            except:
+                break
+                
+# 1236. Web Crawler
+class Q1236:
+    def crawl(self, startUrl: str, htmlParser: 'HtmlParser') -> List[str]:
+        host = startUrl[7:].split('/')[0]
+        def valid_host(url):
+            nonlocal host
+            return len(url) > 7 and url[7:].split('/')[0] == host
+        
+        ret = set([startUrl])
+        q = deque([startUrl])
+        
+        while q:
+            url = q.pop()
+            for nextUrl in htmlParser.getUrls(url):
+                if nextUrl not in ret and valid_host(nextUrl):
+                    ret.add(nextUrl)
+                    q.appendleft(nextUrl)
+        return list(ret)
+# 71. Simplify Path
+class Q71:
+    def simplifyPath(self, path: str) -> str:
+        pStack = []
+        i = 0
+        path = path.split('/')
+        for p in path:
+            if len(p) == 0:
+                continue
+            elif p == '.':
+                continue
+            elif p == '..':
+                if len(pStack) > 0:
+                    pStack.pop()
+            else:
+                pStack.append(p)
+                
+        return '/'+'/'.join(pStack)
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
