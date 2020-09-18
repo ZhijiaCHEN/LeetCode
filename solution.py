@@ -4282,8 +4282,6 @@ class Q823
         
         return maxArea
 
-
-
 from queue import Queue
 import threading
 # 1242. Web Crawler Multithreaded
@@ -4358,6 +4356,7 @@ class Q1236:
                     ret.add(nextUrl)
                     q.appendleft(nextUrl)
         return list(ret)
+
 # 71. Simplify Path
 class Q71:
     def simplifyPath(self, path: str) -> str:
@@ -4376,6 +4375,97 @@ class Q71:
                 pStack.append(p)
                 
         return '/'+'/'.join(pStack)
+
+# 936. Stamping The Sequence
+class Q936:
+    def movesToStamp(self, stamp: str, target: str) -> List[int]:
+        if len(stamp) > len(target) or len(stamp) == 0: return []
+        target = list(target)
+        stamp = list(stamp)
+        ret = []
+        dp = set()
+        
+        def match(i):
+            nonlocal target, stamp, ret
+            change = False
+            for tChar, sChar in zip(target[i: i + len(stamp)], stamp):
+                if tChar == '?': continue
+                if tChar != sChar: return False
+                change = True
+            if change:
+                target[i: i+len(stamp)] = '?'*len(stamp)
+                ret.append(i)
+            dp.add(i)
+            return change
+        
+        change = True
+        while change:
+            change = False
+            for i in range(len(target)-len(stamp)+1):
+                if i in dp: continue
+                if match(i):
+                    change = True
+        return ret[::-1] if target == ['?']*len(target) else []
+
+# 304. Range Sum Query 2D - Immutable
+class NumMatrix:
+
+    def __init__(self, matrix: List[List[int]]):
+        self.memo = {}
+        self.matrix = matrix
+
+    def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:
+        if row2 < row1 or col2 < col1: return 0
+        if (row1, col1, row2, col2) not in self.memo:
+            if row1 == 0 and col1 == 0:
+                self.memo[(0, 0, row2, col2)] = sum([sum(self.matrix[r][:col2+1]) for r in range(row2+1)])
+            else:
+                self.memo[(row1, col1, row2, col2)] = self.sumRegion(0, 0, row2, col2) - self.sumRegion(0, 0, row1 -1, col2) - self.sumRegion(row1, 0, row2, col1-1)
+        return self.memo[(row1, col1, row2, col2)]
+
+# 76. Minimum Window Substring
+class Q76:
+    def minWindow(self, s: str, t: str) -> str:
+        lp = 0
+        rp = 0
+        cntDict = {}
+        tCnt = {}
+        for c in t:
+            tCnt[c] = tCnt.get(c, 0) + 1
+        tSet = set(t)
+        rmCnt = tCnt.copy()
+        while len(rmCnt) > 0 and rp < len(s):
+            if s[rp] in tSet:
+                cntDict[s[rp]] = cntDict.get(s[rp], 0) + 1
+                
+                r = rmCnt.get(s[rp], 0)
+                if r == 1:
+                    rmCnt.pop(s[rp])
+                elif r > 1:
+                    rmCnt[s[rp]] -= 1
+                    
+            rp += 1
+        
+        if len(rmCnt) > 0:
+            return ''
+        while s[lp] not in tSet:
+            lp += 1
+        ret = s[lp: rp]
+        while 1:
+            while cntDict[s[lp]] == tCnt[s[lp]] and rp < len(s):
+                if s[rp] in tSet:
+                    cntDict[s[rp]] += 1
+                rp += 1
+            while s[lp] not in t or cntDict[s[lp]] != tCnt[s[lp]]:
+                if s[lp] in tSet:
+                    cntDict[s[lp]] -= 1
+                lp += 1
+            if rp-lp < len(ret):
+                ret = s[lp:rp]
+            if rp == len(s):
+                break
+        return ret
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
