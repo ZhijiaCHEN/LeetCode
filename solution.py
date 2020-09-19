@@ -4529,6 +4529,125 @@ class Q921:
         ret += parCnt
         return ret
 
+# 1233. Remove Sub-Folders from the Filesystem
+class Q1233:
+    def removeSubfolders(self, folder: List[str]) -> List[str]:
+        trie = [None, {}] #[path of the folder, trie node]
+        for rawPath in folder:
+            path = rawPath.split('/')[1:]
+            node = trie
+            for f in path:
+                node = node[1].setdefault(f, [None, {}])
+            node[0] = rawPath
+        
+        ret = []
+        q = deque([trie])
+        while q:
+            node = q.pop()
+            if node[0]:
+                ret.append(node[0])
+                continue
+            else:
+                for f in node[1]:
+                    q.appendleft(node[1][f])
+        return ret
+
+# 419. Battleships in a Board
+class Q419:
+    def countBattleships(self, board: List[List[str]]) -> int:
+        R = len(board)
+        C = len(board[0])
+        cnt = 0
+        for r in range(R):
+            for c in range(C):
+                if board[r][c] == 'X':
+                    if (r+1==R or board[r+1][c] == '.') and (c+1==C or board[r][c+1]=='.'):
+                        cnt += 1
+        return cnt
+
+# 1570. Dot Product of Two Sparse Vectors
+class SparseVector:
+    def __init__(self, nums: List[int]):
+        self.non0 = {}
+        for i, x in enumerate(nums):
+            if x != 0:
+                self.non0[i] = x
+
+    # Return the dotProduct of two sparse vectors
+    def dotProduct(self, vec: 'SparseVector') -> int:
+        ret = 0
+        for i in self.non0:
+            if i in vec.non0:
+                ret += self.non0[i]*vec.non0[i]
+        return ret
+
+# 381. Insert Delete GetRandom O(1) - Duplicates allowed
+from random import randint
+class RandomizedCollection:
+
+    def __init__(self):
+        """
+        Initialize your data structure here.
+        """
+        self.cnt = 0
+        self.valCnt = {}
+
+    def insert(self, val: int) -> bool:
+        """
+        Inserts a value to the collection. Returns true if the collection did not already contain the specified element.
+        """
+        self.cnt += 1
+        self.valCnt[val] = self.valCnt.get(val, 0) + 1
+        return self.valCnt[val] == 1
+    
+
+    def remove(self, val: int) -> bool:
+        """
+        Removes a value from the collection. Returns true if the collection contained the specified element.
+        """
+        if val in self.valCnt:
+            self.valCnt[val] -= 1
+            if self.valCnt[val] == 0:
+                self.valCnt.pop(val)
+            self.cnt -= 1
+            return True
+        else:
+            return False
+        
+
+    def getRandom(self) -> int:
+        """
+        Get a random element from the collection.
+        """
+        pick = randint(1, self.cnt)
+        s = 0
+        for val, cnt in self.valCnt.items():
+            s += cnt
+            if s >= pick:
+                return val
+
+# 536. Construct Binary Tree from String
+class Q536:
+    def str2tree(self, s: str) -> TreeNode:
+        if len(s) == 0:
+            return None
+
+        def dfs(i):
+            nonlocal s
+            j = i+1
+            while j < len(s) and s[j] not in ['(', ')']:
+                j += 1
+            node = TreeNode(int(s[i:j]))
+            i = j
+            
+            if i < len(s) and s[i] == '(':
+                node.left, i = dfs(i+1)
+                if i < len(s) and s[i] == '(':
+                    node.right, i = dfs(i+1)
+            return node, i+1
+        
+        return dfs(0)[0]
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
