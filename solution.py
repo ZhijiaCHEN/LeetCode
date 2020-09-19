@@ -4466,6 +4466,69 @@ class Q76:
                 break
         return ret
 
+# 1216. Valid Palindrome III
+class Q1216:
+    def isValidPalindrome(self, s: str, k: int) -> bool:
+        lp = 0
+        rp = len(s) - 1
+        memo = {} # s: [max invalid k, min valid k]
+        def dp(lp, rp, k):
+            if lp >= rp:
+                return True
+            subS = s[lp:rp+1]
+            # print(lp, rp, subS)
+            if subS not in memo or memo[subS][0] < k < memo[subS][1]:
+                isValid = True
+                while lp < rp:
+                    if s[lp] != s[rp]:
+                        if k == 0:
+                            isValid = False
+                            break
+                        else:
+                            isValid = dp(lp + 1, rp, k - 1) or dp(lp, rp - 1, k - 1)
+                            break
+                    lp += 1
+                    rp -= 1
+                bound = memo.setdefault(subS, [-1, len(subS) - 1])
+                if isValid:
+                    bound[1] = min(k, bound[1])
+                else:
+                    bound[0] = max(k, bound[0])
+            return k >= memo[subS][1]
+        return dp(lp, rp, k)
+
+# 1424. Diagonal Traverse II
+class Q1424:
+    def findDiagonalOrder(self, nums: List[List[int]]) -> List[int]:
+        ret = []
+        R = len(nums)
+        C = max([len(row) for row in nums])
+        itr = deque([[] for c in range(C)])
+        for row in nums:
+            ret += list(itr.popleft())[::-1]
+            itr.append([])
+            for r, i in zip(row, itr):
+                i.append(r)
+        while itr:
+            ret += list(itr.popleft())[::-1]
+        return ret
+
+# 921. Minimum Add to Make Parentheses Valid
+class Q921:
+    def minAddToMakeValid(self, S: str) -> int:
+        parCnt = 0
+        ret = 0
+        for char in S:
+            if char == '(':
+                parCnt += 1
+            elif char == ')':
+                parCnt -= 1
+            if parCnt == -1:
+                ret += 1
+                parCnt = 0
+        ret += parCnt
+        return ret
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
