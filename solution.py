@@ -4648,6 +4648,73 @@ class Q536:
         
         return dfs(0)[0]
 
+# 1269. Number of Ways to Stay in the Same Place After Some Steps
+from math import comb
+class Q1269:
+    def numWays(self, steps: int, arrLen: int) -> int:
+        # equivalent to the possible ways of moving up to steps and return to 0 index
+        # number of moves to the left and right must be the same
+        # so it becomes, from for step in range(0, steps//2*2+1, 2), how many ways to arrange move step/2 left and step/2 right
+        # should remain in the array
+        
+        memo = {(1, 1, 0):1, (0, 0, 0): 1}
+        def backtrack(idx, lstep, rstep):
+            nonlocal arrLen, memo
+            if lstep - rstep != idx:
+                return 0
+            if (idx, lstep, rstep) not in memo:
+                cnt = 0
+                if idx > 0 and lstep > 0:
+                    cnt += backtrack(idx - 1, lstep - 1, rstep)   
+                if idx < arrLen - 1 and rstep > 0:
+                    cnt += (backtrack(idx + 1, lstep, rstep - 1))
+                cnt %= (10**9 + 7)
+                memo[(idx, lstep, rstep)] = cnt
+            return memo[(idx, lstep, rstep)]
+        cnt = 0
+        for k in range(0, steps//2*2+1, 2):
+            cnt += backtrack(0, k//2, k//2)*comb(steps, steps - k)
+            cnt %= (10**9 + 7)
+        return cnt
+
+# 373. Find K Pairs with Smallest Sums
+import heapq
+class Q373:
+    def kSmallestPairs(self, nums1: List[int], nums2: List[int], k: int) -> List[List[int]]:
+        if len(nums1) == 0 or len(nums2) == 0:
+            return []
+        ret = []
+        q = [(nums1[i]+nums2[0], i, 0) for i in range(len(nums1))]
+        heapq.heapify(q)
+        while len(ret) < k and q:
+            (_, p1, p2) = heapq.heappop(q)
+            ret.append([nums1[p1], nums2[p2]])
+            if p2 + 1 < len(nums2):
+                heapq.heappush(q, (nums1[p1] + nums2[p2+1], p1, p2+1))
+        return ret
+
+# 1439. Find the Kth Smallest Sum of a Matrix With Sorted Rows
+import heapq
+class Q1439:
+    def kSmallestPairs(self, nums1: List[int], nums2: List[int], k) -> List[int]:
+        if len(nums1) == 0 or len(nums2) == 0:
+            return []
+        ret = []
+        q = [(nums1[i]+nums2[0], i, 0) for i in range(len(nums1))]
+        heapq.heapify(q)
+        while q and len(ret) < k:
+            s, p1, p2 = heapq.heappop(q)
+            ret.append(s)
+            if p2 + 1 < len(nums2):
+                heapq.heappush(q, (nums1[p1]+nums2[p2+1], p1, p2 + 1))
+        return ret
+    
+    def kthSmallest(self, mat: List[List[int]], k: int) -> int:
+        ret = mat[0][:k]
+        for row in mat[1:]:
+            ret = self.kSmallestPairs(ret, row, k)
+        return ret[k-1]
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
