@@ -4715,6 +4715,96 @@ class Q1439:
             ret = self.kSmallestPairs(ret, row, k)
         return ret[k-1]
 
+# 43. Multiply Strings
+class Solution:
+    def multiply(self, num1: str, num2: str) -> str:
+        char2int = {str(i):i for i in range(10)}
+        if len(num1) < len(num2):
+            num1, num2 = num2, num1
+        subMult = []
+        digit1 = 0
+        for x1 in num1[::-1]:
+            x1 = char2int[x1]
+            carry = 0
+            mult = [0]*digit1
+            for x2 in num2[::-1]:
+                x2 = char2int[x2]
+                m = x1*x2 + carry
+                mult.append(m%10)
+                carry = m//10
+            mult.append(carry)
+            subMult.append(mult)
+            digit1 += 1
+        ret = []
+        carry = 0
+        digit = 1
+        L = max([len(x) for x in subMult])
+
+        for i in range(L):
+            s = carry
+            for row in subMult:
+                if i < len(row):
+                    s += row[i]
+            
+            ret .append(str(s%10))
+            carry = s//10
+        ret.append(str(carry))
+
+        while len(ret) > 1:
+            if ret[-1] != '0':
+                break
+            ret.pop()
+        ret = ''.join(ret[::-1])
+        return ret
+
+# 1411. Number of Ways to Paint N × 3 Grid
+class Q1411:
+    def numOfWays(self, n: int) -> int:
+        if n == 0:
+            return 0
+        a121 = 6
+        a123 = 6
+        for _ in range(n-1):
+            a121Tmp = (a121*3 + a123*2)
+            a123Tmp = (a121*2 + a123*2)
+            a121 = a121Tmp%(10**9 + 7)
+            a123 = a123Tmp%(10**9 + 7)
+        return (a121 + a123)%(10**9 + 7)
+
+# 759. Employee Free Time
+# Definition for an Interval.
+class Interval:
+    def __init__(self, start: int = None, end: int = None):
+        self.start = start
+        self.end = end
+class Q759:
+    def merge(self, schedule: '[[Interval]]')->'[Interval]':
+        S = [i for s in schedule for i in s]
+        if len(S) == 0:
+            return []
+        S.sort(key = lambda s:s.start)
+        prevInt = S[0]
+        p = 1
+        merged = [prevInt]
+        for thisInt in S[1:]:
+            if thisInt.start > prevInt.end:
+                merged.append(thisInt)
+                prevInt = thisInt
+            else:
+                prevInt.end = max(prevInt.end, thisInt.end)
+        return merged
+        
+    def employeeFreeTime(self, schedule: '[[Interval]]') -> '[Interval]':
+        merged = self.merge(schedule)
+        if len(merged) == 0:
+            return []
+        prevInt = merged[0]
+        ret = []
+        for thisInt in merged[1:]:
+            ret.append(Interval(prevInt.end, thisInt.start))
+            prevInt = thisInt
+        return ret
+
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
