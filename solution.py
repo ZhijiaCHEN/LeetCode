@@ -4805,6 +4805,139 @@ class Q759:
             prevInt = thisInt
         return ret
 
+# 480. Sliding Window Median
+import bisect
+class Q480:
+    def medianSlidingWindow(self, nums: List[int], k: int) -> List[float]:
+        win = sorted([x for x in nums[:k]])
+        p = k
+        midP = k//2
+        isOdd = (k%2 == 1)
+        if isOdd:
+            ret = [win[midP]]
+        else:
+            ret = [(win[midP-1]+win[midP])/2]
+        while p < len(nums):
+            # delete the leftmost window number
+            del win[bisect.bisect_left(win, nums[p-k])]
+            # add the new number
+            bisect.insort(win, nums[p])
+            if isOdd:
+                ret.append(win[midP])
+            else:
+                ret.append((win[midP-1]+win[midP])/2)
+            p += 1
+        return ret
+
+# 995. Minimum Number of K Consecutive Bit Flips
+class Solution:
+    def minKBitFlips(self, A: List[int], K: int) -> int:
+        hint = [False]*len(A)
+        flipFlag = False
+        cnt = 0
+        for i in range(len(hint)):
+            if (A[i] == 0 and flipFlag == hint[i]) or (A[i] == 1 and flipFlag != hint[i]):
+                if i+K-1 >= len(hint): return -1
+                flipFlag = not flipFlag
+                cnt += 1
+            if i+K < len(hint):
+                hint[i+K] = flipFlag
+        return cnt
+    
+# 308. Range Sum Query 2D - Mutable
+# class NumMatrix:
+    def __init__(self, matrix: List[List[int]]):
+        for row in matrix:
+            for c in range(1, len(row)):
+                row[c] += row[c-1]
+        self.matrix = matrix
+
+    def update(self, row: int, col: int, val: int) -> None:
+        if col == 0:
+            diff = self.matrix[row][col] - val
+        else:
+            diff = self.matrix[row][col] - self.matrix[row][col-1] - val
+
+        for c in range(col, len(self.matrix[row])):
+            #print(self.matrix[row][c])
+            self.matrix[row][c] -= diff
+            #print(self.matrix[row][c])
+        #print(self.matrix)
+            
+
+    def sumRegion(self, row1: int, col1: int, row2: int, col2: int) -> int:
+        sum = 0
+        for row in self.matrix[row1:row2+1]:
+            sum += row[col2]
+            if col1 > 0:
+                sum -= row[col1-1]
+        return sum
+
+# 460. LFU Cache
+import bisect
+class LFUCache:
+
+    def __init__(self, capacity: int):
+        self.key2freq = {} # char -> frequency
+        self.freq2key = {} # frequency -> [key]
+        self.cnt = 0
+        self.capacity = capacity
+        self.cache = {}
+        
+    def key_rm(self, key):
+        # remove key from freq2key
+        freq = self.key2freq[key]
+        keyL = self.freq2key[freq]
+        if len(keyL) == 1:
+            self.freq2key.pop(freq)
+        else:
+            rmIdx = 0
+            while keyL[rmIdx] != key:
+                rmIdx += 1
+            #rint(key, keyL, rmIdx)
+            del keyL[rmIdx]
+
+    
+    def key_add(self, key):
+        # add key to freq2key
+        freq = self.key2freq[key]
+        self.freq2key.setdefault(freq, []).append(key)
+    
+    def get(self, key: int) -> int:
+        #rint('before get key: {}'.format(key), self.freq2key)
+        if key not in self.cache:
+            ret = -1
+        else:            
+            self.key_rm(key)
+            self.key2freq[key] += 1
+            self.key_add(key)
+            ret = self.cache[key]
+        #rint('after get key: {}'.format(key), self.freq2key)
+        return ret
+            
+    def put(self, key: int, value: int) -> None:
+        if self.capacity == 0:
+            return
+        #rint('before put key: {} and value: {}'.format(key, value), self.freq2key)
+        freq = self.key2freq.get(key, 0)
+        if freq == 0:
+            if self.cnt < self.capacity:
+                self.cnt += 1
+            else:
+                minFreq = min(self.freq2key.keys())
+                keyL = self.freq2key[minFreq]
+                #print('target cache', cache)
+                rmKey = keyL[0]
+                self.key_rm(rmKey)
+                self.key2freq.pop(rmKey)
+                self.cache.pop(rmKey)
+        else:
+            self.key_rm(key)
+        self.key2freq[key] = freq + 1
+        self.key_add(key)
+        self.cache[key] = value
+        #rint('after put key: {} and value: {}'.format(key, value), self.freq2key)
+        
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
