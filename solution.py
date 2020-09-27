@@ -4226,7 +4226,7 @@ class Q658:
         return arr[lptr:rptr+1]
 
 # 347. Top K Frequent Elements
-class Q347
+class Q347:
     def topKFrequent(self, nums: List[int], k: int) -> List[int]:
         histo = {}
         for n in nums:
@@ -4236,7 +4236,7 @@ class Q347
         return [x[0] for x in ret[:k]]
 
 # 827. Making A Large Island
-class Q823
+class Q823:
     def largestIsland(self, grid: List[List[int]]) -> int:
         from collections import deque
         
@@ -4295,8 +4295,8 @@ import threading
 #        :type url: str
 #        :rtype List[str]
 #        """
-
-class Q1242:
+import time
+class HtmlParser:
     def crawl(self, startUrl: str, htmlParser: 'HtmlParser') -> List[str]:
         q = Queue()
         q.put(startUrl)
@@ -4778,7 +4778,7 @@ class Interval:
         self.start = start
         self.end = end
 class Q759:
-    def merge(self, schedule: '[[Interval]]')->'[Interval]':
+    def merge(self, schedule):
         S = [i for s in schedule for i in s]
         if len(S) == 0:
             return []
@@ -4794,7 +4794,7 @@ class Q759:
                 prevInt.end = max(prevInt.end, thisInt.end)
         return merged
         
-    def employeeFreeTime(self, schedule: '[[Interval]]') -> '[Interval]':
+    def employeeFreeTime(self, schedule):
         merged = self.merge(schedule)
         if len(merged) == 0:
             return []
@@ -4937,7 +4937,68 @@ class LFUCache:
         self.key_add(key)
         self.cache[key] = value
         #rint('after put key: {} and value: {}'.format(key, value), self.freq2key)
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+"""
+reverse every sublist of length k, and connect them
+there are two main problems here:
+1. how to reverse the k-node sublist;
+2. how to connect a sublist to the previous one.
+3. how to keep the last sublist that shorter than k as it is.
+The two problems should be solved while running through the list.
+For the problem 1:
+Let's use pL and pR to anchor the left and right end node of a sublist, respectively.
+Note that we need to remember where the head and tail of the sublist, so we use subHead and subTaile to remember the head and the tail of the sublist.
+The subTail is the first node the the sublist, for the subHead, let's initialize it as the first node of sublist, and update it while reversing the sublist.
+For the problem 2:
+we should remember the tail of the reversed part of the list, so let's keep it in a variable named tail.
+After we have reversed a sublist, tail.next = subHead, tail = subTail. We can initailize the tail as the first node of the list.
+For the problem 3:
+For each round of reversing a sublist, we first set the pL and pR. If we are not able to set the pR, i.e., the remaining number of nodes is less than k, then
+we set tail.next = pL and return
+"""
+class Solution:
+    def reverseKGroup(self, head: ListNode, k: int) -> ListNode:
+        if head is None or k == 1: return head
+        ret = None
+        tail = head
         
+        pL = head
+        pR = head
+        subHead = pL
+        subTail = pL
+        cnt = 1
+        while 1:
+            while cnt < k and pR and pR.next:
+                pR = pR.next
+                cnt += 1
+            if cnt < k:
+                if ret:
+                    tail.next = pL
+                    return ret
+                else:
+                    return head
+            if ret is None:
+                ret = pR
+
+            pRNext = pR.next
+            while pL != pRNext:
+                pLNext = pL.next
+
+                pL.next = subHead
+                subHead = pL
+                pL = pLNext
+
+            tail.next = subHead
+            tail = subTail
+            pR = pL
+            subHead = pL
+            subTail = pL
+            cnt = 1
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
