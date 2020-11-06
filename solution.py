@@ -5005,6 +5005,7 @@ class Solution:
             subHead = pL
             subTail = pL
             cnt = 1
+# hello 5008
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
