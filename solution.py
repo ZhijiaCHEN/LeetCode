@@ -4964,7 +4964,14 @@ we set tail.next = pL and return
 class Solution:
     def reverseKGroup(self, head: ListNode, k: int) -> ListNode:
         if head is None or k == 1: return head
-        ret = None
+        ret = head
+        cnt = 1
+        while cnt < k and ret.next:
+            ret = ret.next
+            cnt += 1
+        if cnt < k:
+            return ret
+
         tail = head
         
         pL = head
@@ -4972,6 +4979,7 @@ class Solution:
         subHead = pL
         subTail = pL
         cnt = 1
+
         while 1:
             while cnt < k and pR and pR.next:
                 pR = pR.next
@@ -4982,8 +4990,6 @@ class Solution:
                     return ret
                 else:
                     return head
-            if ret is None:
-                ret = pR
 
             pRNext = pR.next
             while pL != pRNext:
