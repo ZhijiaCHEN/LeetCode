@@ -5005,12 +5005,13 @@ class Solution:
             subHead = pL
             subTail = pL
             cnt = 1
+# hello 5008 clone
 if __name__ == '__main__':
     q = Q680()
     print(q.validPalindrome("eccer"))
  
 
-    # q.put(4,4)
+    q.put(4,4)
     # print(q.get(1))
     # print(q.get(3))
     # print(q.get(4))
