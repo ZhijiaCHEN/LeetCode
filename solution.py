@@ -3001,8 +3001,8 @@ class Q689:
 
 # 339. Nested List Weight Sum
 class Q339:
-    def depthSum(self, nestedList: List[NestedInteger]) -> int:
-        def list_sum(nestedList: List[NestedInteger], depth: int):
+    def depthSum(self, nestedList: List['NestedInteger']) -> int:
+        def list_sum(nestedList: List['NestedInteger'], depth: int):
             s = 0
             for n in nestedList:
                 if type(n) == int:
@@ -5006,15 +5006,132 @@ class Solution:
             subTail = pL
             cnt = 1
 
-if __name__ == '__main__':
-    q = Q680()
-    print(q.validPalindrome("eccer"))
- 
+from collections import deque
+class Q752:
+    def bfs(self, deadends: List[str], target: str) -> int:
+        visited = set(deadends)
+        if '0000' in visited:
+            return -1
+        q = set(['0000'])
+        step = 0
+        while q:
+            nextQ = set()
+            for cur in q:
+                if cur == target:
+                    return step
+                visited.add(cur)
+                for i in range(4):
+                    nxtPlus = cur[:i] + str((int(cur[i]) + 1) % 10) + cur[i+1:]
+                    if nxtPlus not in visited:
+                        nextQ.add(nxtPlus)
+                    nxtMinus = cur[:i] + str((int(cur[i]) - 1) % 10) + cur[i+1:]
+                    if nxtMinus not in visited:
+                        nextQ.add(nxtMinus)
+            step += 1
+            q = nextQ
+        return -1
+    
+    def dual_bfs(self, deadends: List[str], target: str) -> int:
+        visited = set(deadends)
+        if '0000' in visited:
+            return -1
+        else:
+            visited.add('0000')
+        q1 = set(['0000'])
+        q2 = set([target])
+        step = 0
+        while q1 and q2:
+            temp = set()
+            for cur in q1:
+                if cur in q2:
+                    return step
+                visited.add(cur)
+                for i in range(4):
+                    nxtPlus = cur[:i] + str((int(cur[i]) + 1) % 10) + cur[i+1:]
+                    if nxtPlus not in visited:
+                        temp.add(nxtPlus)
 
-    q.put(4,4)
-    # print(q.get(1))
-    # print(q.get(3))
-    # print(q.get(4))
+                    nxtMinus = cur[:i] + str((int(cur[i]) - 1) % 10) + cur[i+1:]
+                    if nxtMinus not in visited:
+                        temp.add(nxtMinus)
+            step += 1
+            if len(q2) <= len(temp):
+                q1, q2 = q2, temp
+            else:
+                q1 = temp
+        return -1
+    
+    def openLock(self, deadends: List[str], target: str) -> int:
+        return self.bfs(deadends, target)
+
+def infix2postfix(expr):
+    s = expr.split(' ')
+    def convert(s):
+        p = 0
+        ret0 = []
+        while p < len(s):
+            if s[p] == '(':
+                pCnt = -1
+                tmp = []
+                while pCnt != 0:
+                    p += 1
+                    if s[p] == '(':
+                        pCnt -= 1
+                    elif s[p] == ')':
+                        pCnt += 1
+                    tmp.append(s[p])
+                tmp.pop()
+                ret0.append(convert(tmp))
+            else:
+                ret0.append(s[p])
+            p += 1
+
+        p = 0
+        ret1 = []
+        while p < len(ret0):
+            if ret0[p] in ['*', '/']:
+                ret1.append(' '.join([ret1.pop(), ret0[p+1], ret0[p]]))
+                p += 2
+            else:
+                ret1.append(ret0[p])
+                p += 1
+
+        ret2 = []
+        p = 0
+        while p < len(ret1):
+            if ret1[p] in ['+', '-']:
+                ret2.append(' '.join([ret2.pop(), ret1[p+1], ret1[p]]))
+                p += 2
+            else:
+                ret2.append(ret1[p])
+                p += 1
+        assert len(ret2) == 1
+        return ret2[0]
+    return convert(s)
+
+
+
+if __name__ == '__main__':
+    infix = '1 + 1 * ( ( 2 - 3 ) * 4 * ( 5 - 1 ) ) / 2'
+    postfix = infix2postfix(infix)
+    t = eval(infix)
+    p = postfix.split(' ')
+    s = []
+    for e in p:
+        if e in ['+', '-', '*', '/']:
+            op2 = s.pop()
+            op1 = s.pop()
+            if e == '+':
+                s.append(op1 + op2)
+            elif e == '-':
+                s.append(op1 - op2)
+            elif e == '*':
+                s.append(op1 * op2)
+            else:
+                s.append(op1 / op2)
+        else:
+            s.append(int(e))
+    print(t == s[0])
 
 
 
